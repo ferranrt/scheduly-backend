@@ -1,17 +1,18 @@
-package main
+package helpers
 
 import (
-	"log"
+	"fmt"
 
 	"ferranrt.com/scheduly-backend/internal/adapters/postgres"
-	"ferranrt.com/scheduly-backend/internal/adapters/postgres/migrations"
 	"ferranrt.com/scheduly-backend/internal/config"
+	"gorm.io/gorm"
 )
 
-func main() {
+func GetDatabaseConnection() (*gorm.DB, error) {
 	cfg, err := config.New()
+	fmt.Println(cfg)
 	if err != nil {
-		log.Fatalf("Failed to load configuration: %v", err)
+		return nil, fmt.Errorf("failed to load configuration: %v", err)
 	}
 
 	db, err := postgres.NewGormPostgreSQL(postgres.GormPostgreSQLConfig{
@@ -24,11 +25,8 @@ func main() {
 	})
 
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		return nil, fmt.Errorf("failed to connect to database: %v", err)
 	}
 
-	err = migrations.Migrate(db)
-	if err != nil {
-		log.Fatalf("Failed to migrate database: %v", err)
-	}
+	return db, nil
 }

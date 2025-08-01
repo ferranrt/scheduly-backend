@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"ferranrt.com/scheduly-backend/internal/domain"
+	_ "github.com/joho/godotenv/autoload"
 )
 
 // Config holds all configuration for the application
@@ -49,7 +50,7 @@ func New() (*Config, error) {
 			Port:     getEnv("DB_PORT", "5432"),
 			User:     getEnv("DB_USER", "postgres"),
 			Password: getEnv("DB_PASSWORD", "postgres"),
-			DBName:   getEnv("DB_NAME", "bitakora"),
+			DBName:   getEnv("DB_NAME", "scheduly"),
 			SSLMode:  getEnv("DB_SSL_MODE", "disable"),
 		},
 		JWT: domain.JWTConfig{
@@ -86,14 +87,16 @@ func (c *Config) validate() error {
 
 // getEnv gets an environment variable or returns a default value
 func getEnv(key, defaultValue string) string {
-	if value, exists := os.LookupEnv(key); exists {
-		return value
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
 	}
-	return defaultValue
+	return value
 }
 
 // getDurationEnv gets a duration from an environment variable or returns a default value
 func getDurationEnv(key string, defaultValue time.Duration) time.Duration {
+
 	if value, exists := os.LookupEnv(key); exists {
 		if duration, err := time.ParseDuration(value); err == nil {
 			return duration

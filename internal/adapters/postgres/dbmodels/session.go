@@ -10,7 +10,7 @@ import (
 
 type Session struct {
 	gorm.Model
-	ID           uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4()"`
+	ID           uuid.UUID `gorm:"type:uuid;default:gen_random_uuid()"`
 	UserID       uuid.UUID `gorm:"not null;index"`
 	RefreshToken string    `gorm:"not null;unique"`
 	UserAgent    string    `gorm:"not null"`

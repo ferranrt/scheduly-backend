@@ -40,7 +40,7 @@ clean:
 # Run database migrations
 migrate:
 	@echo "Running database migrations..."
-	go run cmd/db/main.go
+	go run cmd/dbmigrate/migrate.go
 
 # Development mode with hot reload (requires air)
 dev:
