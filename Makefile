@@ -3,12 +3,12 @@
 # Default target
 help:
 	@echo "Available commands:"
-	@echo "  deps     - Install dependencies"
-	@echo "  build    - Build the application"
-	@echo "  run      - Run the application"
-	@echo "  test     - Run tests
-	@echo "  migrate  - Run database migrations"
-	@echo "  rebuild  - Rebuild database tables"
+	@echo "  deps     			- Install dependencies"
+	@echo "  build    			- Build the application"
+	@echo "  run      			- Run the application"
+	@echo "  test     			- Run tests"
+	@echo "  migrate-database  	- Run database migrations"
+	@echo "  rebuild-database  	- Rebuild database tables"
 
 # Install dependencies
 deps:
@@ -42,9 +42,14 @@ clean:
 	go clean
 
 # Run database migrations
-migrate:
+migrate-database:
 	@echo "Running database migrations..."
 	go run cmd/dbtools/main.go migrate
+
+# Run database rebuild
+rebuild-database:
+	@echo "Rebuilding database tables..."
+	go run cmd/dbtools/main.go rebuild
 
 
 # Docker build

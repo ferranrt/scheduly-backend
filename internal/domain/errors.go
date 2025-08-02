@@ -1,24 +1,39 @@
 package domain
 
-import "errors"
+import (
+	"net/http"
+)
 
 type Error error
+type HTTPErrorBody struct {
+	Code   string `json:"code"`
+	Errors any    `json:"errors"`
+}
 
-var (
-	ErrEnvInvalid Error = errors.New("ENV_INVALID")
+type DomainError struct {
+	HTTPCode      int
+	HTTPErrorBody HTTPErrorBody
+	OriginalError string
+}
 
-	ErrBadRequestPayload Error = errors.New("BAD_REQUEST_PAYLOAD")
+func NewDomainError(httpCode int, errorCode string, errorMsg any, err error) *DomainError {
+	return &DomainError{
+		HTTPCode:      httpCode,
+		OriginalError: err.Error(),
+		HTTPErrorBody: HTTPErrorBody{
+			Code:   errorCode,
+			Errors: errorMsg,
+		},
+	}
+}
 
-	ErrInternalServerError Error = errors.New("SERVER_ERROR")
-	ErrForbidden           Error = errors.New("FORBIDDEN")
-	ErrInsert              Error = errors.New("INSERT_ERROR")
-	ErrUpdate              Error = errors.New("UPDATE_ERROR")
-	ErrDelete              Error = errors.New("DELETE_ERROR")
-	ErrNotFound            Error = errors.New("NOT_FOUND")
-	ErrBadRequest          Error = errors.New("BAD_REQUEST")
-
-	ErrDbInsert Error = errors.New("DB_INSERT_ERROR")
-	ErrDbUpdate Error = errors.New("DB_UPDATE_ERROR")
-	ErrDbSelect Error = errors.New("DB_SELECT_ERROR")
-	ErrDbDelete Error = errors.New("DB_DELETE_ERROR")
-)
+func NewInternalError(err error) *DomainError {
+	return &DomainError{
+		HTTPCode:      http.StatusInternalServerError,
+		OriginalError: err.Error(),
+		HTTPErrorBody: HTTPErrorBody{
+			Code:   ErrUnexpectedError.Error(),
+			Errors: "Internal server error",
+		},
+	}
+}
