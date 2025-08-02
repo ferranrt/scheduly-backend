@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"ferranrt.com/scheduly-backend/cmd/dbtools/commands"
+	"scheduly.io/core/cmd/dbtools/commands"
 )
 
 var rootCmd = commands.RootCommand()

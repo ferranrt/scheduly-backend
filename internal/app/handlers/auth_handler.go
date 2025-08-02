@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"strings"
 
-	"ferranrt.com/scheduly-backend/internal/app/helpers"
-	"ferranrt.com/scheduly-backend/internal/domain"
-	"ferranrt.com/scheduly-backend/internal/ports/usecases"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"scheduly.io/core/internal/app/helpers"
+	"scheduly.io/core/internal/domain"
+	"scheduly.io/core/internal/ports/usecases"
 )
 
 type AuthHandler struct {

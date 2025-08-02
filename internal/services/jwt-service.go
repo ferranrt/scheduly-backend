@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"time"
 
-	"ferranrt.com/scheduly-backend/internal/domain"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"scheduly.io/core/internal/domain"
 )
 
 type JWTService interface {

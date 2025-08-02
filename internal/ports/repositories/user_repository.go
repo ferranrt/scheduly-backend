@@ -3,8 +3,8 @@ package repositories
 import (
 	"context"
 
-	"ferranrt.com/scheduly-backend/internal/domain"
 	"github.com/google/uuid"
+	"scheduly.io/core/internal/domain"
 )
 
 type UserRepository interface {

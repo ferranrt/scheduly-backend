@@ -3,7 +3,7 @@ package repositories
 import (
 	"context"
 
-	"ferranrt.com/scheduly-backend/internal/domain"
+	"scheduly.io/core/internal/domain"
 )
 
 type SessionRepository interface {

@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 
-	"ferranrt.com/scheduly-backend/internal/adapters/postgres/dbmodels"
-	"ferranrt.com/scheduly-backend/internal/adapters/postgres/mappers"
-	"ferranrt.com/scheduly-backend/internal/domain"
-	"ferranrt.com/scheduly-backend/internal/ports/repositories"
+	"scheduly.io/core/internal/adapters/postgres/dbmodels"
+	"scheduly.io/core/internal/adapters/postgres/mappers"
+	"scheduly.io/core/internal/domain"
+	"scheduly.io/core/internal/ports/repositories"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"

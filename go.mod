@@ -1,4 +1,4 @@
-module ferranrt.com/scheduly-backend
+module scheduly.io/core
 
 go 1.24.0
 

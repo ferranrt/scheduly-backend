@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"log"
 
-	"ferranrt.com/scheduly-backend/cmd/dbtools/helpers"
-	"ferranrt.com/scheduly-backend/internal/adapters/postgres/dbmodels"
-	"ferranrt.com/scheduly-backend/internal/adapters/postgres/migrations"
 	"github.com/spf13/cobra"
+	"scheduly.io/core/cmd/dbtools/helpers"
+	"scheduly.io/core/internal/adapters/postgres/dbmodels"
+	"scheduly.io/core/internal/adapters/postgres/migrations"
 )
 
 func Cleanup() *cobra.Command {

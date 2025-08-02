@@ -3,9 +3,9 @@ package dbmodels
 import (
 	"time"
 
-	"ferranrt.com/scheduly-backend/internal/domain"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"scheduly.io/core/internal/domain"
 )
 
 type Session struct {

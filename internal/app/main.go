@@ -9,16 +9,16 @@ import (
 	"syscall"
 	"time"
 
-	pg_repos "ferranrt.com/scheduly-backend/internal/adapters/postgres/repositories"
-	"ferranrt.com/scheduly-backend/internal/usecases"
+	pg_repos "scheduly.io/core/internal/adapters/postgres/repositories"
+	"scheduly.io/core/internal/usecases"
 
-	"ferranrt.com/scheduly-backend/internal/app/handlers"
-	"ferranrt.com/scheduly-backend/internal/app/middleware"
-	"ferranrt.com/scheduly-backend/internal/app/routes"
-	"ferranrt.com/scheduly-backend/internal/config"
-	"ferranrt.com/scheduly-backend/internal/services"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"scheduly.io/core/internal/app/handlers"
+	"scheduly.io/core/internal/app/middleware"
+	"scheduly.io/core/internal/app/routes"
+	"scheduly.io/core/internal/config"
+	"scheduly.io/core/internal/services"
 )
 
 type RestApp struct {

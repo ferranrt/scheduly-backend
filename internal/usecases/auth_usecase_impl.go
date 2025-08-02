@@ -5,11 +5,11 @@ import (
 	"errors"
 	"time"
 
-	"ferranrt.com/scheduly-backend/internal/domain"
-	"ferranrt.com/scheduly-backend/internal/ports/repositories"
-	"ferranrt.com/scheduly-backend/internal/ports/usecases"
-	"ferranrt.com/scheduly-backend/internal/services"
 	"github.com/google/uuid"
+	"scheduly.io/core/internal/domain"
+	"scheduly.io/core/internal/ports/repositories"
+	"scheduly.io/core/internal/ports/usecases"
+	"scheduly.io/core/internal/services"
 )
 
 type authUseCase struct {

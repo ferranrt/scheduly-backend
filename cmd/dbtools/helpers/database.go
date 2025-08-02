@@ -3,9 +3,9 @@ package helpers
 import (
 	"fmt"
 
-	"ferranrt.com/scheduly-backend/internal/adapters/postgres"
-	"ferranrt.com/scheduly-backend/internal/config"
 	"gorm.io/gorm"
+	"scheduly.io/core/internal/adapters/postgres"
+	"scheduly.io/core/internal/config"
 )
 
 func GetDatabaseConnection() (*gorm.DB, error) {

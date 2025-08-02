@@ -5,12 +5,12 @@ import (
 	"errors"
 	"time"
 
-	"ferranrt.com/scheduly-backend/internal/adapters/postgres/dbmodels"
-	"ferranrt.com/scheduly-backend/internal/adapters/postgres/mappers"
-	"ferranrt.com/scheduly-backend/internal/ports/repositories"
+	"scheduly.io/core/internal/adapters/postgres/dbmodels"
+	"scheduly.io/core/internal/adapters/postgres/mappers"
+	"scheduly.io/core/internal/ports/repositories"
 
-	"ferranrt.com/scheduly-backend/internal/domain"
 	"gorm.io/gorm"
+	"scheduly.io/core/internal/domain"
 )
 
 type sessionRepository struct {

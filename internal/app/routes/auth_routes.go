@@ -1,9 +1,9 @@
 package routes
 
 import (
-	"ferranrt.com/scheduly-backend/internal/app/handlers"
-	"ferranrt.com/scheduly-backend/internal/app/middleware"
 	"github.com/gin-gonic/gin"
+	"scheduly.io/core/internal/app/handlers"
+	"scheduly.io/core/internal/app/middleware"
 )
 
 func SetupAuthRoutes(router *gin.Engine, authHandler *handlers.AuthHandler, authMiddleware *middleware.AuthMiddleware) {

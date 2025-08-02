@@ -5,8 +5,8 @@ import (
 	"os"
 	"time"
 
-	"ferranrt.com/scheduly-backend/internal/domain"
 	_ "github.com/joho/godotenv/autoload"
+	"scheduly.io/core/internal/domain"
 )
 
 // Config holds all configuration for the application

@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 
-	"ferranrt.com/scheduly-backend/internal/adapters/postgres"
-	"ferranrt.com/scheduly-backend/internal/app"
-	"ferranrt.com/scheduly-backend/internal/config"
+	"scheduly.io/core/internal/adapters/postgres"
+	"scheduly.io/core/internal/app"
+	"scheduly.io/core/internal/config"
 )
 
 func main() {
