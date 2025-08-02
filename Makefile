@@ -6,9 +6,9 @@ help:
 	@echo "  deps     - Install dependencies"
 	@echo "  build    - Build the application"
 	@echo "  run      - Run the application"
-	@echo "  test     - Run tests"
-	@echo "  clean    - Clean build artifacts"
+	@echo "  test     - Run tests
 	@echo "  migrate  - Run database migrations"
+	@echo "  rebuild  - Rebuild database tables"
 
 # Install dependencies
 deps:
@@ -19,12 +19,16 @@ deps:
 # Build the application
 build:
 	@echo "Building application..."
-	go build -o bin/scheduly-backend main.go
+	go build -o bin/scheduly-core-rest cmd/rest/main.go
+
+start:
+	@echo "Starting application..."
+	./bin/scheduly-core-rest
 
 # Run the application
 run:
 	@echo "Running application..."
-	go run main.go
+	go run cmd/rest/main.go
 
 # Run tests
 test:
@@ -40,12 +44,8 @@ clean:
 # Run database migrations
 migrate:
 	@echo "Running database migrations..."
-	go run cmd/dbmigrate/migrate.go
+	go run cmd/dbtools/main.go migrate
 
-# Development mode with hot reload (requires air)
-dev:
-	@echo "Starting development server with hot reload..."
-	air
 
 # Docker build
 docker-build:
@@ -66,16 +66,6 @@ docker-up:
 docker-down:
 	@echo "Stopping services with Docker Compose..."
 	docker-compose down
-
-# Format code
-fmt:
-	@echo "Formatting code..."
-	go fmt ./...
-
-# Lint code
-lint:
-	@echo "Linting code..."
-	golangci-lint run
 
 # Generate API documentation
 docs:

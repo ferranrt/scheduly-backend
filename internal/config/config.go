@@ -54,10 +54,10 @@ func New() (*Config, error) {
 			SSLMode:  getEnv("DB_SSL_MODE", "disable"),
 		},
 		JWT: domain.JWTConfig{
-			AccessTokenSecret:  getEnv("JWT_ACCESS_TOKEN_SECRET", "your_access_token_secret_key_here"),
-			RefreshTokenSecret: getEnv("JWT_REFRESH_TOKEN_SECRET", "your_refresh_token_secret_key_here"),
-			AccessTokenExpiry:  getDurationEnv("JWT_ACCESS_TOKEN_EXPIRY", 15*time.Minute),
-			RefreshTokenExpiry: getDurationEnv("JWT_REFRESH_TOKEN_EXPIRY", 30*24*time.Hour), // 30 days
+			AccessTokenSecret:  getEnv("JWT_SECRET_KEY", "your_access_token_secret_key_here"),
+			RefreshTokenSecret: getEnv("JWT_SECRET_KEY", "your_refresh_token_secret_key_here"),
+			AccessTokenExpiry:  getDurationEnv("JWT_DURATION", 15*time.Minute),
+			RefreshTokenExpiry: getDurationEnv("JWT_DURATION", 30*24*time.Hour), // 30 days
 		},
 	}
 

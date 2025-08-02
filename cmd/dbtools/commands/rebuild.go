@@ -10,13 +10,13 @@ import (
 	"scheduly.io/core/internal/adapters/postgres/migrations"
 )
 
-func Cleanup() *cobra.Command {
+func Rebuild() *cobra.Command {
 	return &cobra.Command{
-		Use:   "cleanup",
-		Short: "Clean up database tables",
+		Use:   "rebuild",
+		Short: "Rebuild database tables",
 		Long:  `Drop all tables and recreate them from scratch. Use with caution!`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := runCleanup(); err != nil {
+			if err := runRebuild(); err != nil {
 				log.Fatalf("Cleanup failed: %v", err)
 			}
 			fmt.Println("Database cleanup completed successfully!")
@@ -24,7 +24,7 @@ func Cleanup() *cobra.Command {
 	}
 }
 
-func runCleanup() error {
+func runRebuild() error {
 	db, err := helpers.GetDatabaseConnection()
 	if err != nil {
 		return err

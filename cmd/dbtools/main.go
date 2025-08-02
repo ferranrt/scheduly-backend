@@ -11,7 +11,7 @@ var rootCmd = commands.RootCommand()
 
 func init() {
 	rootCmd.AddCommand(commands.Migrate())
-	rootCmd.AddCommand(commands.Cleanup())
+	rootCmd.AddCommand(commands.Rebuild())
 }
 
 func main() {
