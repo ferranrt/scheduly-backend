@@ -21,6 +21,18 @@ func NewAuthHandler(authUseCase usecases.AuthUseCase) *AuthHandler {
 	}
 }
 
+type requestMetadata struct {
+	UserAgent string
+	IPAddress string
+}
+
+func getRequestMetadata(ctx *gin.Context) requestMetadata {
+	return requestMetadata{
+		UserAgent: ctx.GetHeader("User-Agent"),
+		IPAddress: helpers.GetClientIPFromRequest(ctx),
+	}
+}
+
 // Register handles user registration
 func (h *AuthHandler) Register(ctx *gin.Context) {
 	var registration domain.UserRegistrationInput
@@ -29,10 +41,9 @@ func (h *AuthHandler) Register(ctx *gin.Context) {
 		return
 	}
 
-	userAgent := ctx.GetHeader("User-Agent")
-	ipAddress := helpers.GetClientIPFromRequest(ctx)
+	requestMetadata := getRequestMetadata(ctx)
 
-	response, err := h.authUseCase.Register(ctx.Request.Context(), &registration, userAgent, ipAddress)
+	response, err := h.authUseCase.Register(ctx.Request.Context(), &registration, requestMetadata.UserAgent, requestMetadata.IPAddress)
 	if err != nil {
 		if err.Error() == "user already exists" {
 			ctx.JSON(http.StatusConflict, helpers.BuildErrorResponse(err.Error()))
@@ -53,10 +64,9 @@ func (h *AuthHandler) Login(ctx *gin.Context) {
 		return
 	}
 
-	userAgent := helpers.GetUserAgentFromRequest(ctx)
-	ipAddress := helpers.GetClientIPFromRequest(ctx)
+	requestMetadata := getRequestMetadata(ctx)
 
-	response, err := h.authUseCase.Login(ctx.Request.Context(), &login, userAgent, ipAddress)
+	response, err := h.authUseCase.Login(ctx.Request.Context(), &login, requestMetadata.UserAgent, requestMetadata.IPAddress)
 	if err != nil {
 		if err.Error() == "invalid credentials" {
 			ctx.JSON(http.StatusUnauthorized, helpers.BuildErrorResponse(err.Error()))

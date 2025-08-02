@@ -17,6 +17,7 @@ type authUseCase struct {
 	sessionRepo     repositories.SessionRepository
 	jwtService      services.JWTService
 	passwordService services.PasswordService
+	jwtConfig       domain.JWTConfig
 }
 
 func NewAuthUseCase(
@@ -24,18 +25,20 @@ func NewAuthUseCase(
 	sessionRepo repositories.SessionRepository,
 	jwtService services.JWTService,
 	passwordService services.PasswordService,
+	jwtConfig domain.JWTConfig,
 ) usecases.AuthUseCase {
 	return &authUseCase{
 		userRepo:        userRepo,
 		sessionRepo:     sessionRepo,
 		jwtService:      jwtService,
 		passwordService: passwordService,
+		jwtConfig:       jwtConfig,
 	}
 }
 
-func (uc *authUseCase) Register(ctx context.Context, registration *domain.UserRegistrationInput, userAgent, ipAddress string) (*domain.AuthResponseDTO, error) {
+func (useCase *authUseCase) Register(ctx context.Context, registration *domain.UserRegistrationInput, userAgent, ipAddress string) (*domain.AuthResponseDTO, error) {
 	// Check if user already exists
-	exists, err := uc.userRepo.ExistsByEmail(ctx, registration.Email)
+	exists, err := useCase.userRepo.ExistsByEmail(ctx, registration.Email)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +47,7 @@ func (uc *authUseCase) Register(ctx context.Context, registration *domain.UserRe
 	}
 
 	// Hash password
-	hashedPassword, err := uc.passwordService.HashPassword(registration.Password)
+	hashedPassword, err := useCase.passwordService.HashPassword(registration.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -59,18 +62,18 @@ func (uc *authUseCase) Register(ctx context.Context, registration *domain.UserRe
 		UpdatedAt: time.Now(),
 	}
 
-	err = uc.userRepo.Create(ctx, user)
+	err = useCase.userRepo.Create(ctx, user)
 	if err != nil {
 		return nil, err
 	}
 
 	// Generate tokens
-	accessToken, err := uc.jwtService.GenerateAccessToken(user)
+	accessToken, err := useCase.jwtService.GenerateAccessToken(user)
 	if err != nil {
 		return nil, err
 	}
 
-	refreshToken, err := uc.jwtService.GenerateRefreshToken(user)
+	refreshToken, err := useCase.jwtService.GenerateRefreshToken(user)
 	if err != nil {
 		return nil, err
 	}
@@ -82,12 +85,12 @@ func (uc *authUseCase) Register(ctx context.Context, registration *domain.UserRe
 		UserAgent:    userAgent,
 		IPAddress:    ipAddress,
 		IsActive:     true,
-		ExpiresAt:    time.Now().Add(30 * 24 * time.Hour), // 30 days
+		ExpiresAt:    time.Now().Add(useCase.jwtConfig.RefreshTokenExpiry),
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
 
-	err = uc.sessionRepo.Create(ctx, session)
+	err = useCase.sessionRepo.Create(ctx, session)
 	if err != nil {
 		return nil, err
 	}
@@ -96,30 +99,30 @@ func (uc *authUseCase) Register(ctx context.Context, registration *domain.UserRe
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		User:         user.ToResponse(),
-		ExpiresIn:    int64(15 * time.Minute.Seconds()), // 15 minutes
+		ExpiresIn:    int64(useCase.jwtConfig.AccessTokenExpiry.Seconds()),
 	}, nil
 }
 
-func (uc *authUseCase) Login(ctx context.Context, login *domain.UserLoginInput, userAgent, ipAddress string) (*domain.AuthResponseDTO, error) {
+func (useCase *authUseCase) Login(ctx context.Context, login *domain.UserLoginInput, userAgent, ipAddress string) (*domain.AuthResponseDTO, error) {
 	// Get user by email
-	user, err := uc.userRepo.GetByEmail(ctx, login.Email)
+	user, err := useCase.userRepo.GetByEmail(ctx, login.Email)
 	if err != nil {
 		return nil, errors.New("invalid credentials")
 	}
 
 	// Verify password
-	err = uc.passwordService.VerifyPassword(user.Password, login.Password)
+	err = useCase.passwordService.VerifyPassword(user.Password, login.Password)
 	if err != nil {
 		return nil, errors.New("invalid credentials")
 	}
 
 	// Generate tokens
-	accessToken, err := uc.jwtService.GenerateAccessToken(user)
+	accessToken, err := useCase.jwtService.GenerateAccessToken(user)
 	if err != nil {
 		return nil, err
 	}
 
-	refreshToken, err := uc.jwtService.GenerateRefreshToken(user)
+	refreshToken, err := useCase.jwtService.GenerateRefreshToken(user)
 	if err != nil {
 		return nil, err
 	}
@@ -131,12 +134,12 @@ func (uc *authUseCase) Login(ctx context.Context, login *domain.UserLoginInput, 
 		UserAgent:    userAgent,
 		IPAddress:    ipAddress,
 		IsActive:     true,
-		ExpiresAt:    time.Now().Add(30 * 24 * time.Hour), // 30 days
+		ExpiresAt:    time.Now().Add(useCase.jwtConfig.RefreshTokenExpiry),
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
 
-	err = uc.sessionRepo.Create(ctx, session)
+	err = useCase.sessionRepo.Create(ctx, session)
 	if err != nil {
 		return nil, err
 	}
@@ -145,13 +148,13 @@ func (uc *authUseCase) Login(ctx context.Context, login *domain.UserLoginInput, 
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		User:         user.ToResponse(),
-		ExpiresIn:    int64(15 * time.Minute.Seconds()), // 15 minutes
+		ExpiresIn:    int64(useCase.jwtConfig.AccessTokenExpiry.Seconds()),
 	}, nil
 }
 
-func (uc *authUseCase) RefreshToken(ctx context.Context, refreshToken string) (*domain.RefreshTokenResponseDTO, error) {
+func (useCase *authUseCase) RefreshToken(ctx context.Context, refreshToken string) (*domain.RefreshTokenResponseDTO, error) {
 	// Validate refresh token
-	claims, err := uc.jwtService.ValidateToken(refreshToken)
+	claims, err := useCase.jwtService.ValidateToken(refreshToken)
 	if err != nil {
 		return nil, errors.New("invalid refresh token")
 	}
@@ -161,7 +164,7 @@ func (uc *authUseCase) RefreshToken(ctx context.Context, refreshToken string) (*
 	}
 
 	// Check if session exists and is active
-	session, err := uc.sessionRepo.GetByRefreshToken(ctx, refreshToken)
+	session, err := useCase.sessionRepo.GetByRefreshToken(ctx, refreshToken)
 	if err != nil {
 		return nil, errors.New("invalid refresh token")
 	}
@@ -171,28 +174,28 @@ func (uc *authUseCase) RefreshToken(ctx context.Context, refreshToken string) (*
 	}
 
 	// Get user
-	user, err := uc.userRepo.GetByID(ctx, claims.UserID)
+	user, err := useCase.userRepo.GetByID(ctx, claims.UserID)
 	if err != nil {
 		return nil, errors.New("user not found")
 	}
 
 	// Generate new tokens
-	newAccessToken, err := uc.jwtService.GenerateAccessToken(user)
+	newAccessToken, err := useCase.jwtService.GenerateAccessToken(user)
 	if err != nil {
 		return nil, err
 	}
 
-	newRefreshToken, err := uc.jwtService.GenerateRefreshToken(user)
+	newRefreshToken, err := useCase.jwtService.GenerateRefreshToken(user)
 	if err != nil {
 		return nil, err
 	}
 
 	// Update session with new refresh token
 	session.RefreshToken = newRefreshToken
-	session.ExpiresAt = time.Now().Add(30 * 24 * time.Hour)
+	session.ExpiresAt = time.Now().Add(useCase.jwtConfig.RefreshTokenExpiry)
 	session.UpdatedAt = time.Now()
 
-	err = uc.sessionRepo.Update(ctx, session)
+	err = useCase.sessionRepo.Update(ctx, session)
 	if err != nil {
 		return nil, err
 	}
@@ -200,13 +203,13 @@ func (uc *authUseCase) RefreshToken(ctx context.Context, refreshToken string) (*
 	return &domain.RefreshTokenResponseDTO{
 		AccessToken:  newAccessToken,
 		RefreshToken: newRefreshToken,
-		ExpiresIn:    int64(15 * time.Minute.Seconds()),
+		ExpiresIn:    int64(useCase.jwtConfig.AccessTokenExpiry.Seconds()),
 	}, nil
 }
 
-func (uc *authUseCase) Logout(ctx context.Context, refreshToken string) error {
+func (useCase *authUseCase) Logout(ctx context.Context, refreshToken string) error {
 	// Get session by refresh token
-	session, err := uc.sessionRepo.GetByRefreshToken(ctx, refreshToken)
+	session, err := useCase.sessionRepo.GetByRefreshToken(ctx, refreshToken)
 	if err != nil {
 		return errors.New("invalid refresh token")
 	}
@@ -215,12 +218,12 @@ func (uc *authUseCase) Logout(ctx context.Context, refreshToken string) error {
 	session.IsActive = false
 	session.UpdatedAt = time.Now()
 
-	return uc.sessionRepo.Update(ctx, session)
+	return useCase.sessionRepo.Update(ctx, session)
 }
 
-func (uc *authUseCase) LogoutAll(ctx context.Context, userID string) error {
+func (useCase *authUseCase) LogoutAll(ctx context.Context, userID string) error {
 	// Get all active sessions for user
-	sessions, err := uc.sessionRepo.GetByUserID(ctx, userID)
+	sessions, err := useCase.sessionRepo.GetByUserID(ctx, userID)
 	if err != nil {
 		return err
 	}
@@ -229,7 +232,7 @@ func (uc *authUseCase) LogoutAll(ctx context.Context, userID string) error {
 	for _, session := range sessions {
 		session.IsActive = false
 		session.UpdatedAt = time.Now()
-		err = uc.sessionRepo.Update(ctx, session)
+		err = useCase.sessionRepo.Update(ctx, session)
 		if err != nil {
 			return err
 		}
@@ -238,8 +241,8 @@ func (uc *authUseCase) LogoutAll(ctx context.Context, userID string) error {
 	return nil
 }
 
-func (uc *authUseCase) ValidateToken(ctx context.Context, token string) (*domain.JWTClaims, error) {
-	claims, err := uc.jwtService.ValidateToken(token)
+func (useCase *authUseCase) ValidateToken(ctx context.Context, token string) (*domain.JWTClaims, error) {
+	claims, err := useCase.jwtService.ValidateToken(token)
 	if err != nil {
 		return nil, err
 	}
@@ -249,7 +252,7 @@ func (uc *authUseCase) ValidateToken(ctx context.Context, token string) (*domain
 	}
 
 	// Verify user still exists
-	_, err = uc.userRepo.GetByID(ctx, claims.UserID)
+	_, err = useCase.userRepo.GetByID(ctx, claims.UserID)
 	if err != nil {
 		return nil, errors.New("user not found")
 	}
@@ -257,9 +260,9 @@ func (uc *authUseCase) ValidateToken(ctx context.Context, token string) (*domain
 	return claims, nil
 }
 
-func (uc *authUseCase) GetProfile(ctx context.Context, userID uuid.UUID) (*domain.UserProfileResponseDTO, error) {
+func (useCase *authUseCase) GetProfile(ctx context.Context, userID uuid.UUID) (*domain.UserProfileResponseDTO, error) {
 	// Get user by ID
-	user, err := uc.userRepo.GetByID(ctx, userID)
+	user, err := useCase.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, errors.New("user not found")
 	}

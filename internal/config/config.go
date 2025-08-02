@@ -56,8 +56,8 @@ func New() (*Config, error) {
 		JWT: domain.JWTConfig{
 			AccessTokenSecret:  getEnv("JWT_SECRET_KEY", "your_access_token_secret_key_here"),
 			RefreshTokenSecret: getEnv("JWT_SECRET_KEY", "your_refresh_token_secret_key_here"),
-			AccessTokenExpiry:  getDurationEnv("JWT_DURATION", 15*time.Minute),
-			RefreshTokenExpiry: getDurationEnv("JWT_DURATION", 30*24*time.Hour), // 30 days
+			AccessTokenExpiry:  getJWTDuration("JWT_ACCESS_TOKEN_DURATION", "JWT_DURATION", 15*time.Minute),
+			RefreshTokenExpiry: getJWTDuration("JWT_REFRESH_TOKEN_DURATION", "JWT_DURATION", 30*24*time.Hour), // 30 days
 		},
 	}
 
@@ -102,5 +102,26 @@ func getDurationEnv(key string, defaultValue time.Duration) time.Duration {
 			return duration
 		}
 	}
+	return defaultValue
+}
+
+// getJWTDuration gets a JWT duration from environment variables with fallback support
+// It first checks for a specific duration variable, then falls back to JWT_DURATION
+func getJWTDuration(specificKey, fallbackKey string, defaultValue time.Duration) time.Duration {
+	// First try the specific key (e.g., JWT_ACCESS_TOKEN_DURATION)
+	if value, exists := os.LookupEnv(specificKey); exists {
+		if duration, err := time.ParseDuration(value); err == nil {
+			return duration
+		}
+	}
+
+	// If specific key doesn't exist or is invalid, try the fallback key (JWT_DURATION)
+	if value, exists := os.LookupEnv(fallbackKey); exists {
+		if duration, err := time.ParseDuration(value); err == nil {
+			return duration
+		}
+	}
+
+	// Return default value if neither key exists or both are invalid
 	return defaultValue
 }

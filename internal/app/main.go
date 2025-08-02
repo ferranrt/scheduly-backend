@@ -48,7 +48,7 @@ func (app *RestApp) Run() error {
 	passwordService := services.NewPasswordService()
 
 	// Initialize use cases
-	authUseCase := usecases.NewAuthUseCase(userRepo, sessionRepo, jwtService, passwordService)
+	authUseCase := usecases.NewAuthUseCase(userRepo, sessionRepo, jwtService, passwordService, app.cfg.JWT)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authUseCase)
