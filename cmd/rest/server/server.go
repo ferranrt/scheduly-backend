@@ -1,4 +1,4 @@
-package app
+package server
 
 import (
 	"context"
@@ -9,14 +9,15 @@ import (
 	"syscall"
 	"time"
 
+	"scheduly.io/core/cmd/rest/handlers"
+	"scheduly.io/core/cmd/rest/middleware"
+	"scheduly.io/core/cmd/rest/routes"
 	pg_repos "scheduly.io/core/internal/adapters/postgres/repositories"
 	"scheduly.io/core/internal/usecases"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"scheduly.io/core/internal/app/handlers"
-	"scheduly.io/core/internal/app/middleware"
-	"scheduly.io/core/internal/app/routes"
+
 	"scheduly.io/core/internal/config"
 	"scheduly.io/core/internal/services"
 )

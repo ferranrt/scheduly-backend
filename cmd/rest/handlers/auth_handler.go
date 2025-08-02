@@ -6,7 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"scheduly.io/core/internal/app/helpers"
+
+	"scheduly.io/core/cmd/rest/helpers"
 	"scheduly.io/core/internal/domain"
 	"scheduly.io/core/internal/ports/usecases"
 )
