@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	_ "github.com/joho/godotenv/autoload"
@@ -34,38 +35,44 @@ type DatabaseConfig struct {
 	SSLMode  string
 }
 
-// JWTConfig holds the JWT configuration
+var (
+	once           sync.Once
+	configInstance *Config
+)
 
-// New creates a new Config instance with values from environment variables
-func New() (*Config, error) {
-	config := &Config{
-		Server: ServerConfig{
-			Port:         getEnv("SERVER_PORT", "8080"),
-			ReadTimeout:  getDurationEnv("SERVER_READ_TIMEOUT", 15*time.Second),
-			WriteTimeout: getDurationEnv("SERVER_WRITE_TIMEOUT", 15*time.Second),
-			IdleTimeout:  getDurationEnv("SERVER_IDLE_TIMEOUT", 60*time.Second),
-		},
-		Database: DatabaseConfig{
-			Host:     getEnv("DB_HOST", "localhost"),
-			Port:     getEnv("DB_PORT", "5432"),
-			User:     getEnv("DB_USER", "postgres"),
-			Password: getEnv("DB_PASSWORD", "postgres"),
-			DBName:   getEnv("DB_NAME", "scheduly"),
-			SSLMode:  getEnv("DB_SSL_MODE", "disable"),
-		},
-		JWT: domain.JWTConfig{
-			AccessTokenSecret:  getEnv("JWT_SECRET_KEY", "your_access_token_secret_key_here"),
-			RefreshTokenSecret: getEnv("JWT_SECRET_KEY", "your_refresh_token_secret_key_here"),
-			AccessTokenExpiry:  getJWTDuration("JWT_ACCESS_TOKEN_DURATION", "JWT_DURATION", 15*time.Minute),
-			RefreshTokenExpiry: getJWTDuration("JWT_REFRESH_TOKEN_DURATION", "JWT_DURATION", 30*24*time.Hour), // 30 days
-		},
-	}
+func New() *Config {
+	once.Do(func() {
+		config := &Config{
+			Server: ServerConfig{
+				Port:         getEnv("SERVER_PORT", "8080"),
+				ReadTimeout:  getDurationEnv("SERVER_READ_TIMEOUT", 15*time.Second),
+				WriteTimeout: getDurationEnv("SERVER_WRITE_TIMEOUT", 15*time.Second),
+				IdleTimeout:  getDurationEnv("SERVER_IDLE_TIMEOUT", 60*time.Second),
+			},
+			Database: DatabaseConfig{
+				Host:     getEnv("DB_HOST", "localhost"),
+				Port:     getEnv("DB_PORT", "5432"),
+				User:     getEnv("DB_USER", "postgres"),
+				Password: getEnv("DB_PASSWORD", "postgres"),
+				DBName:   getEnv("DB_NAME", "scheduly"),
+				SSLMode:  getEnv("DB_SSL_MODE", "disable"),
+			},
+			JWT: domain.JWTConfig{
+				AccessTokenSecret:  getEnv("JWT_SECRET_KEY", "your_access_token_secret_key_here"),
+				RefreshTokenSecret: getEnv("JWT_SECRET_KEY", "your_refresh_token_secret_key_here"),
+				AccessTokenExpiry:  getJWTDuration("JWT_ACCESS_TOKEN_DURATION", "JWT_DURATION", 15*time.Minute),
+				RefreshTokenExpiry: getJWTDuration("JWT_REFRESH_TOKEN_DURATION", "JWT_DURATION", 30*24*time.Hour), // 30 days
+			},
+		}
 
-	if err := config.validate(); err != nil {
-		return nil, fmt.Errorf("invalid configuration: %w", err)
-	}
+		if err := config.validate(); err != nil {
+			panic(fmt.Errorf("invalid configuration: %w", err))
+		}
 
-	return config, nil
+		configInstance = config
+	})
+
+	return configInstance
 }
 
 // validate checks if the configuration is valid

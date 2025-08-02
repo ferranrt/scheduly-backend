@@ -1,16 +1,14 @@
 package helpers
 
 import (
-	"fmt"
+	"log"
 
 	"gorm.io/gorm"
 	"scheduly.io/core/internal/adapters/postgres"
 	"scheduly.io/core/internal/config"
 )
 
-func GetDatabaseConnection() (*gorm.DB, error) {
-	cfg := config.New()
-
+func GetDatabaseFromConfig(cfg *config.Config) (*gorm.DB, error) {
 	db, err := postgres.NewGormPostgreSQL(postgres.GormPostgreSQLConfig{
 		Host:     cfg.Database.Host,
 		Port:     cfg.Database.Port,
@@ -21,7 +19,7 @@ func GetDatabaseConnection() (*gorm.DB, error) {
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %v", err)
+		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
 	return db, nil
