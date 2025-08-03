@@ -1,0 +1,156 @@
+@startuml
+title Data Model - Appointment Management System with Relationship Types
+
+'=======================
+' MAIN CLASSES
+'=======================
+
+class Owner {
+  +id: UUID
+  +name: string
+  +email: string
+  +password: string
+  +phone: string
+  +registrationDate: DateTime
+}
+
+class Business {
+  +id: UUID
+  +ownerId: UUID
+  +name: string
+  +address: string
+  +phone: string
+  +email: string
+}
+
+class User {
+  +id: UUID
+  +businessId: UUID
+  +name: string
+  +email: string
+  +password: string
+  +phone: string
+  +role: string
+  +active: boolean
+}
+
+class Lead {
+  +id: UUID
+  +name: string
+  +email: string
+  +phone: string
+  +consent: boolean
+  +createdAt: DateTime
+}
+
+class Appointment {
+  +id: UUID
+  +userId: UUID
+  +leadId: UUID
+  +dateTime: DateTime
+  +status: string
+  +reason: string
+  +notified: boolean
+}
+
+class AppointmentReview {
+  +id: UUID
+  +appointmentId: UUID
+  +rating: int
+  +comment: string
+  +createdAt: DateTime
+}
+
+class NotificationTemplate {
+  +id: UUID
+  +userId: UUID
+  +name: string
+  +channel: string
+  +content: text
+  +type: string
+}
+
+class Notification {
+  +id: UUID
+  +appointmentId: UUID
+  +templateId: UUID
+  +channel: string
+  +sentAt: DateTime
+  +status: string
+}
+
+class Availability {
+  +id: UUID
+  +userId: UUID
+  +dayOfWeek: string
+  +startTime: Time
+  +endTime: Time
+  +active: boolean
+}
+
+class TimeBlock {
+  +id: UUID
+  +userId: UUID
+  +date: Date
+  +reason: string
+}
+
+class ActivityLog {
+  +id: UUID
+  +userId: UUID
+  +action: string
+  +timestamp: DateTime
+  +details: text
+}
+
+'=======================
+' PLANS & SUBSCRIPTIONS
+'=======================
+
+class PaymentPlan {
+  +id: UUID
+  +name: string
+  +monthlyPrice: decimal
+  +includedAppointments: int
+  +includedNotifications: int
+  +description: text
+}
+
+class Subscription {
+  +id: UUID
+  +ownerId: UUID
+  +planId: UUID
+  +startDate: Date
+  +endDate: Date
+  +status: string
+  +usedAppointments: int
+  +usedNotifications: int
+}
+
+'=======================
+' RELATIONSHIPS
+'=======================
+
+Owner *-- Business : owns
+Business o-- User : includes
+User o-- Availability : configures
+User o-- TimeBlock : blocks
+User o-- Appointment : creates
+User o-- ActivityLog : generates
+User o-- NotificationTemplate : defines
+User o-- Notification : sends
+
+Lead o-- Appointment : books
+Lead --> "1" Appointment : givesConsent
+
+Appointment *-- AppointmentReview : receives
+Appointment o-- Notification : triggers
+Appointment --> User
+Appointment --> Lead
+
+NotificationTemplate o-- Notification : usedBy
+
+Owner o-- Subscription : subscribes
+Subscription --> PaymentPlan : chooses
+
+@enduml

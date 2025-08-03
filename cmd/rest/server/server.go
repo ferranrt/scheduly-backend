@@ -40,19 +40,14 @@ func (app *RestApp) Run() error {
 	sessionRepo := pg_repos.NewSessionRepository(app.db)
 
 	// Initialize services
-	jwtService := services.NewJWTService(
-		app.cfg.JWT.AccessTokenSecret,
-		app.cfg.JWT.RefreshTokenSecret,
-		app.cfg.JWT.AccessTokenExpiry,
-		app.cfg.JWT.RefreshTokenExpiry,
-	)
+	jwtService := services.NewJWTService(app.cfg.JWT)
 	passwordService := services.NewPasswordService()
 
 	// Initialize use cases
 	authUseCase := usecases.NewAuthUseCase(userRepo, sessionRepo, jwtService, passwordService, app.cfg.JWT)
 
 	// Initialize handlers
-	authHandler := handlers.NewAuthHandler(authUseCase)
+	authHandler := handlers.NewAuthRootHandler(authUseCase)
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(authUseCase)

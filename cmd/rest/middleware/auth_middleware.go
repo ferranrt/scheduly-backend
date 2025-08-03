@@ -1,6 +1,9 @@
 package middleware
 
 import (
+	"errors"
+	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -26,28 +29,34 @@ func injectClaimsToContext(ctx *gin.Context, claims *domain.JWTClaims) {
 	ctx.Set("user_claims", claims)
 }
 
+func extractHeaderToken(ctx *gin.Context) (string, error) {
+	authHeader := ctx.GetHeader("Authorization")
+	if authHeader == "" {
+		return "", errors.New("authorization header required")
+	}
+
+	if !strings.HasPrefix(authHeader, "Bearer ") {
+		return "", errors.New("invalid authorization header format")
+	}
+
+	return strings.TrimPrefix(authHeader, "Bearer "), nil
+}
+
 // Authenticate middleware validates JWT tokens and sets user context
 func (middleware *AuthMiddleware) Authenticate() gin.HandlerFunc {
+	log.Println("Authenticate middleware")
 	return func(ctx *gin.Context) {
-		authHeader := ctx.GetHeader("Authorization")
-		if authHeader == "" {
-			ctx.JSON(http.StatusUnauthorized, helpers.BuildErrorResponse("Authorization header required"))
+		token, err := extractHeaderToken(ctx)
+		if err != nil {
+			ctx.JSON(http.StatusUnauthorized, helpers.BuildErrorResponse(err.Error()))
 			ctx.Abort()
 			return
 		}
-
-		// Check if the header starts with "Bearer "
-		if !strings.HasPrefix(authHeader, "Bearer ") {
-			ctx.JSON(http.StatusUnauthorized, helpers.BuildErrorResponse("Invalid authorization header format"))
-			ctx.Abort()
-			return
-		}
-
-		// Extract the token
-		token := strings.TrimPrefix(authHeader, "Bearer ")
 
 		// Validate the token
 		claims, err := middleware.authUseCase.ValidateToken(ctx.Request.Context(), token)
+		fmt.Println("token", token)
+		fmt.Println("claims", claims)
 		if err != nil {
 			ctx.JSON(http.StatusUnauthorized, helpers.BuildErrorResponse("Invalid or expired token"))
 			ctx.Abort()
@@ -64,20 +73,12 @@ func (middleware *AuthMiddleware) Authenticate() gin.HandlerFunc {
 // OptionalAuth middleware validates JWT tokens if present but doesn't require them
 func (middleware *AuthMiddleware) OptionalAuth() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		authHeader := ctx.GetHeader("Authorization")
-		if authHeader == "" {
-			ctx.Next()
+		token, err := extractHeaderToken(ctx)
+		if err != nil {
+			ctx.JSON(http.StatusUnauthorized, helpers.BuildErrorResponse(err.Error()))
+			ctx.Abort()
 			return
 		}
-
-		// Check if the header starts with "Bearer "
-		if !strings.HasPrefix(authHeader, "Bearer ") {
-			ctx.Next()
-			return
-		}
-
-		// Extract the token
-		token := strings.TrimPrefix(authHeader, "Bearer ")
 
 		// Validate the token
 		claims, err := middleware.authUseCase.ValidateToken(ctx.Request.Context(), token)

@@ -20,18 +20,12 @@ type JWTService interface {
 }
 
 type jwtService struct {
-	accessTokenSecret  string
-	refreshTokenSecret string
-	accessTokenExpiry  time.Duration
-	refreshTokenExpiry time.Duration
+	config domain.JWTConfig
 }
 
-func NewJWTService(accessTokenSecret, refreshTokenSecret string, accessTokenExpiry, refreshTokenExpiry time.Duration) JWTService {
+func NewJWTService(config domain.JWTConfig) JWTService {
 	return &jwtService{
-		accessTokenSecret:  accessTokenSecret,
-		refreshTokenSecret: refreshTokenSecret,
-		accessTokenExpiry:  accessTokenExpiry,
-		refreshTokenExpiry: refreshTokenExpiry,
+		config: config,
 	}
 }
 
@@ -46,11 +40,11 @@ func (s *jwtService) GenerateAccessToken(user *domain.User) (string, error) {
 		"user_id": claims.UserID,
 		"email":   claims.Email,
 		"type":    claims.Type,
-		"exp":     time.Now().Add(s.accessTokenExpiry).Unix(),
+		"exp":     time.Now().Add(s.config.AccessTokenExpiry).Unix(),
 		"iat":     time.Now().Unix(),
 	})
 
-	return token.SignedString([]byte(s.accessTokenSecret))
+	return token.SignedString([]byte(s.config.AccessTokenSecret))
 }
 
 func (s *jwtService) GenerateRefreshToken(user *domain.User) (string, error) {
@@ -64,11 +58,11 @@ func (s *jwtService) GenerateRefreshToken(user *domain.User) (string, error) {
 		"user_id": claims.UserID,
 		"email":   claims.Email,
 		"type":    claims.Type,
-		"exp":     time.Now().Add(s.refreshTokenExpiry).Unix(),
+		"exp":     time.Now().Add(s.config.RefreshTokenExpiry).Unix(),
 		"iat":     time.Now().Unix(),
 	})
 
-	return token.SignedString([]byte(s.refreshTokenSecret))
+	return token.SignedString([]byte(s.config.RefreshTokenSecret))
 }
 
 func (s *jwtService) ValidateToken(tokenString string) (*domain.JWTClaims, error) {
@@ -77,7 +71,7 @@ func (s *jwtService) ValidateToken(tokenString string) (*domain.JWTClaims, error
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte(s.accessTokenSecret), nil
+		return []byte(s.config.AccessTokenSecret), nil
 	})
 
 	if err == nil && token.Valid {
@@ -89,7 +83,7 @@ func (s *jwtService) ValidateToken(tokenString string) (*domain.JWTClaims, error
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte(s.refreshTokenSecret), nil
+		return []byte(s.config.RefreshTokenSecret), nil
 	})
 
 	if err != nil {

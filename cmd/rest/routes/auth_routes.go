@@ -6,7 +6,7 @@ import (
 	"scheduly.io/core/cmd/rest/middleware"
 )
 
-func SetupAuthRoutes(router *gin.Engine, authHandler *handlers.AuthHandler, authMiddleware *middleware.AuthMiddleware) {
+func SetupAuthRoutes(router *gin.Engine, authHandler *handlers.AuthRootHandler, authMiddleware *middleware.AuthMiddleware) {
 	auth := router.Group("/api/v1/auth")
 	{
 		// Public routes
