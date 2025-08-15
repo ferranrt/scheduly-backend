@@ -3,15 +3,15 @@ package domain
 import (
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
 type JWTClaims struct {
 	UserID uuid.UUID `json:"user_id"`
 	Email  string    `json:"email"`
-	Type   string    `json:"type"` // "access" or "refresh"
+	jwt.RegisteredClaims
 }
-
 type AuthResponseDTO struct {
 	AccessToken  string           `json:"access_token"`
 	RefreshToken string           `json:"refresh_token"`

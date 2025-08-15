@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"scheduly.io/core/cmd/rest/helpers"
@@ -10,8 +9,13 @@ import (
 )
 
 func main() {
+	log.Println("Starting server")
+
+	log.Println("Getting configuration")
 	cfg := config.New()
-	fmt.Println(cfg)
+	config.Print(*cfg)
+
+	log.Println("Connecting to database")
 	db, err := helpers.GetDatabaseFromConfig(cfg)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)

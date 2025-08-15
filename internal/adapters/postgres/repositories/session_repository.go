@@ -5,12 +5,11 @@ import (
 	"errors"
 	"time"
 
+	"gorm.io/gorm"
 	"scheduly.io/core/internal/adapters/postgres/dbmodels"
 	"scheduly.io/core/internal/adapters/postgres/mappers"
-	"scheduly.io/core/internal/ports/repositories"
-
-	"gorm.io/gorm"
 	"scheduly.io/core/internal/domain"
+	"scheduly.io/core/internal/ports"
 )
 
 type sessionRepository struct {
@@ -18,7 +17,7 @@ type sessionRepository struct {
 	mapper   *mappers.SessionMapper
 }
 
-func NewSessionRepository(db *gorm.DB) repositories.SessionRepository {
+func NewSessionRepository(db *gorm.DB) ports.SessionRepository {
 	return &sessionRepository{
 		database: db,
 		mapper:   mappers.NewSessionMapper(),

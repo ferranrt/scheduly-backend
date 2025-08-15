@@ -12,9 +12,11 @@ func NewUserMapper() *UserMapper {
 	return &UserMapper{}
 }
 
-func (m *UserMapper) DomainToDBModel(user *domain.User) *dbmodels.User {
+func (m *UserMapper) ToDbModel(user *domain.User) *dbmodels.User {
 	return &dbmodels.User{
 		ID:        user.ID,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
 		Email:     user.Email,
 		Password:  user.Password,
 		FirstName: user.FirstName,
@@ -22,7 +24,7 @@ func (m *UserMapper) DomainToDBModel(user *domain.User) *dbmodels.User {
 	}
 }
 
-func (m *UserMapper) DBModelToDomain(u *dbmodels.User) *domain.User {
+func (m *UserMapper) ToDomain(u *dbmodels.User) *domain.User {
 	return &domain.User{
 		ID:        u.ID,
 		Email:     u.Email,

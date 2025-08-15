@@ -15,6 +15,8 @@ func NewSessionMapper() *SessionMapper {
 func (m *SessionMapper) DomainToDBModel(session *domain.Session) *dbmodels.Session {
 	return &dbmodels.Session{
 		ID:           session.ID,
+		CreatedAt:    session.CreatedAt,
+		UpdatedAt:    session.UpdatedAt,
 		UserID:       session.UserID,
 		RefreshToken: session.RefreshToken,
 		UserAgent:    session.UserAgent,

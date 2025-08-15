@@ -1,9 +1,8 @@
 package config
 
 import (
-	"fmt"
+	"log"
 	"os"
-	"sync"
 	"time"
 
 	_ "github.com/joho/godotenv/autoload"
@@ -35,100 +34,79 @@ type DatabaseConfig struct {
 	SSLMode  string
 }
 
-var (
-	once           sync.Once
-	configInstance *Config
-)
+func getEnv2(key, defaultValue string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+	log.Printf("%s not set, defaulting to %s", key, defaultValue)
+	return defaultValue
+}
 
-func New() *Config {
-	once.Do(func() {
-		config := &Config{
-			Server: ServerConfig{
-				Port:         getEnv("SERVER_PORT", "8080"),
-				ReadTimeout:  getDurationEnv("SERVER_READ_TIMEOUT", 15*time.Second),
-				WriteTimeout: getDurationEnv("SERVER_WRITE_TIMEOUT", 15*time.Second),
-				IdleTimeout:  getDurationEnv("SERVER_IDLE_TIMEOUT", 60*time.Second),
-			},
-			Database: DatabaseConfig{
-				Host:     getEnv("DB_HOST", "localhost"),
-				Port:     getEnv("DB_PORT", "5432"),
-				User:     getEnv("DB_USER", "postgres"),
-				Password: getEnv("DB_PASSWORD", "postgres"),
-				DBName:   getEnv("DB_NAME", "scheduly"),
-				SSLMode:  getEnv("DB_SSL_MODE", "disable"),
-			},
-			JWT: domain.JWTConfig{
-				AccessTokenSecret:  getEnv("JWT_SECRET_KEY", "your_access_token_secret_key_here"),
-				RefreshTokenSecret: getEnv("JWT_SECRET_KEY", "your_refresh_token_secret_key_here"),
-				AccessTokenExpiry:  getJWTDuration("JWT_ACCESS_TOKEN_DURATION", "JWT_DURATION", 15*time.Minute),
-				RefreshTokenExpiry: getJWTDuration("JWT_REFRESH_TOKEN_DURATION", "JWT_DURATION", 30*24*time.Hour), // 30 days
-			},
+/* func getEnvAsInt(key string, defaultValue int) int {
+	if value, exists := os.LookupEnv(key); exists {
+		if intVal, err := strconv.Atoi(value); err == nil {
+			return intVal
 		}
+		log.Printf("Invalid integer value for %s, defaulting to %d", key, defaultValue)
+	}
+	return defaultValue
+} */
 
-		if err := config.validate(); err != nil {
-			panic(fmt.Errorf("invalid configuration: %w", err))
+func getJWTDuration(specificKey string, defaultValue time.Duration) time.Duration {
+	if value, exists := os.LookupEnv(specificKey); exists {
+		if duration, err := time.ParseDuration(value); err == nil {
+			return duration
 		}
+		log.Printf("Invalid duration value for %s, defaulting to %d", specificKey, defaultValue)
+	}
 
-		configInstance = config
-	})
-
-	return configInstance
+	return defaultValue
 }
 
-// validate checks if the configuration is valid
-func (c *Config) validate() error {
-	if c.Database.Password == "" {
-		return fmt.Errorf("database password is required")
-	}
-
-	if c.JWT.AccessTokenSecret == "" {
-		return fmt.Errorf("JWT access token secret key is required")
-	}
-
-	if c.JWT.RefreshTokenSecret == "" {
-		return fmt.Errorf("JWT refresh token secret key is required")
-	}
-
-	return nil
-}
-
-// getEnv gets an environment variable or returns a default value
-func getEnv(key, defaultValue string) string {
-	value := os.Getenv(key)
-	if value == "" {
-		return defaultValue
-	}
-	return value
-}
-
-// getDurationEnv gets a duration from an environment variable or returns a default value
 func getDurationEnv(key string, defaultValue time.Duration) time.Duration {
 
 	if value, exists := os.LookupEnv(key); exists {
 		if duration, err := time.ParseDuration(value); err == nil {
 			return duration
 		}
+		log.Printf("Invalid duration value for %s, defaulting to %d", key, defaultValue)
 	}
 	return defaultValue
 }
 
-// getJWTDuration gets a JWT duration from environment variables with fallback support
-// It first checks for a specific duration variable, then falls back to JWT_DURATION
-func getJWTDuration(specificKey, fallbackKey string, defaultValue time.Duration) time.Duration {
-	// First try the specific key (e.g., JWT_ACCESS_TOKEN_DURATION)
-	if value, exists := os.LookupEnv(specificKey); exists {
-		if duration, err := time.ParseDuration(value); err == nil {
-			return duration
-		}
+func New() *Config {
+	config := &Config{
+		Server: ServerConfig{
+			Port:         getEnv2("SERVER_PORT", "8080"),
+			ReadTimeout:  getDurationEnv("SERVER_READ_TIMEOUT", 15*time.Second),
+			WriteTimeout: getDurationEnv("SERVER_WRITE_TIMEOUT", 15*time.Second),
+			IdleTimeout:  getDurationEnv("SERVER_IDLE_TIMEOUT", 60*time.Second),
+		},
+		Database: DatabaseConfig{
+			Host:     getEnv2("DB_HOST", "localhost"),
+			Port:     getEnv2("DB_PORT", "5432"),
+			User:     getEnv2("DB_USER", "postgres"),
+			Password: getEnv2("DB_PASSWORD", "postgres"),
+			DBName:   getEnv2("DB_NAME", "scheduly"),
+			SSLMode:  getEnv2("DB_SSL_MODE", "disable"),
+		},
+		JWT: domain.JWTConfig{
+			AtkSecret: getEnv2("JWT_ATK_SECRET_KEY", "your_access_token_secret_key_here"),
+			RtkSecret: getEnv2("JWT_RTK_SECRET_KEY", "your_refresh_token_secret_key_here"),
+			Expiry:    getJWTDuration("JWT_ACCESS_TOKEN_DURATION", 15*time.Minute),
+		},
 	}
+	return config
+}
 
-	// If specific key doesn't exist or is invalid, try the fallback key (JWT_DURATION)
-	if value, exists := os.LookupEnv(fallbackKey); exists {
-		if duration, err := time.ParseDuration(value); err == nil {
-			return duration
-		}
-	}
-
-	// Return default value if neither key exists or both are invalid
-	return defaultValue
+func Print(cfg Config) {
+	log.Printf("App Port: %s\n", cfg.Server.Port)
+	log.Printf("DB Host: %s\n", cfg.Database.Host)
+	log.Printf("DB Port: %s\n", cfg.Database.Port)
+	log.Printf("DB Name: %s\n", cfg.Database.DBName)
+	log.Printf("DB User: %s\n", cfg.Database.User)
+	log.Printf("DB Password: %s\n", cfg.Database.Password)
+	log.Printf("JWT Access Token Secret: %s\n", cfg.JWT.AtkSecret)
+	log.Printf("JWT Refresh Token Secret: %s\n", cfg.JWT.RtkSecret)
+	log.Printf("JWT Access Token Expiry: %s\n", cfg.JWT.Expiry)
 }

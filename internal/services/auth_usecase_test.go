@@ -1,4 +1,4 @@
-package usecases
+package services
 
 import (
 	"context"
@@ -127,10 +127,9 @@ func (m *MockPasswordService) VerifyPassword(hashedPassword, password string) er
 // getTestJWTConfig returns a test JWT configuration
 func getTestJWTConfig() domain.JWTConfig {
 	return domain.JWTConfig{
-		AccessTokenSecret:  "test_access_secret",
-		RefreshTokenSecret: "test_refresh_secret",
-		AccessTokenExpiry:  15 * time.Minute,
-		RefreshTokenExpiry: 30 * 24 * time.Hour, // 30 days
+		AtkSecret: "test_access_secret",
+
+		Expiry: 15 * time.Minute,
 	}
 }
 
@@ -141,7 +140,7 @@ func TestAuthUseCase_Register(t *testing.T) {
 	mockJWTService := new(MockJWTService)
 	mockPasswordService := new(MockPasswordService)
 
-	authUseCase := NewAuthUseCase(mockUserRepo, mockSessionRepo, mockJWTService, mockPasswordService, getTestJWTConfig())
+	authUseCase := NewAuthService(mockUserRepo, mockSessionRepo, getTestJWTConfig())
 
 	registration := &domain.UserRegistrationInput{
 		Email:     "test@example.com",
@@ -180,10 +179,8 @@ func TestAuthUseCase_Register_UserAlreadyExists(t *testing.T) {
 	// Setup
 	mockUserRepo := new(MockUserRepository)
 	mockSessionRepo := new(MockSessionRepository)
-	mockJWTService := new(MockJWTService)
-	mockPasswordService := new(MockPasswordService)
 
-	authUseCase := NewAuthUseCase(mockUserRepo, mockSessionRepo, mockJWTService, mockPasswordService, getTestJWTConfig())
+	authUseCase := NewAuthService(mockUserRepo, mockSessionRepo, getTestJWTConfig())
 
 	registration := &domain.UserRegistrationInput{
 		Email:     "test@example.com",
@@ -212,9 +209,8 @@ func TestAuthUseCase_Login(t *testing.T) {
 	mockUserRepo := new(MockUserRepository)
 	mockSessionRepo := new(MockSessionRepository)
 	mockJWTService := new(MockJWTService)
-	mockPasswordService := new(MockPasswordService)
 
-	authUseCase := NewAuthUseCase(mockUserRepo, mockSessionRepo, mockJWTService, mockPasswordService, getTestJWTConfig())
+	authUseCase := NewAuthService(mockUserRepo, mockSessionRepo, getTestJWTConfig())
 
 	login := &domain.UserLoginInput{
 		Email:    "test@example.com",
@@ -233,7 +229,6 @@ func TestAuthUseCase_Login(t *testing.T) {
 
 	// Expectations
 	mockUserRepo.On("GetByEmail", mock.Anything, login.Email).Return(user, nil)
-	mockPasswordService.On("VerifyPassword", user.Password, login.Password).Return(nil)
 	mockJWTService.On("GenerateAccessToken", user).Return("access_token", nil)
 	mockJWTService.On("GenerateRefreshToken", user).Return("refresh_token", nil)
 	mockSessionRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.Session")).Return(nil)
@@ -253,17 +248,15 @@ func TestAuthUseCase_Login(t *testing.T) {
 	mockUserRepo.AssertExpectations(t)
 	mockSessionRepo.AssertExpectations(t)
 	mockJWTService.AssertExpectations(t)
-	mockPasswordService.AssertExpectations(t)
+
 }
 
 func TestAuthUseCase_GetProfile(t *testing.T) {
 	// Setup
 	mockUserRepo := new(MockUserRepository)
 	mockSessionRepo := new(MockSessionRepository)
-	mockJWTService := new(MockJWTService)
-	mockPasswordService := new(MockPasswordService)
 
-	authUseCase := NewAuthUseCase(mockUserRepo, mockSessionRepo, mockJWTService, mockPasswordService, getTestJWTConfig())
+	authUseCase := NewAuthService(mockUserRepo, mockSessionRepo, getTestJWTConfig())
 
 	userID := uuid.New()
 	user := &domain.User{
@@ -299,10 +292,8 @@ func TestAuthUseCase_GetProfile_UserNotFound(t *testing.T) {
 	// Setup
 	mockUserRepo := new(MockUserRepository)
 	mockSessionRepo := new(MockSessionRepository)
-	mockJWTService := new(MockJWTService)
-	mockPasswordService := new(MockPasswordService)
 
-	authUseCase := NewAuthUseCase(mockUserRepo, mockSessionRepo, mockJWTService, mockPasswordService, getTestJWTConfig())
+	authUseCase := NewAuthService(mockUserRepo, mockSessionRepo, getTestJWTConfig())
 
 	userID := uuid.New()
 

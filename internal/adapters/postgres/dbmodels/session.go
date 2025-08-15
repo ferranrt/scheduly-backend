@@ -9,18 +9,27 @@ import (
 )
 
 type Session struct {
-	gorm.Model
 	ID           uuid.UUID `gorm:"type:uuid;default:gen_random_uuid()"`
-	UserID       uuid.UUID `gorm:"not null;index"`
-	RefreshToken string    `gorm:"not null;unique"`
-	UserAgent    string    `gorm:"not null"`
-	IPAddress    string    `gorm:"not null"`
-	IsActive     bool      `gorm:"default:true"`
-	ExpiresAt    time.Time `gorm:"not null"`
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	DeletedAt    gorm.DeletedAt `gorm:"index"`
+	UserID       uuid.UUID      `gorm:"not null;index"`
+	RefreshToken string         `gorm:"not null;unique"`
+	UserAgent    string         `gorm:"not null"`
+	IPAddress    string         `gorm:"not null"`
+	IsActive     bool           `gorm:"default:true"`
+	ExpiresAt    time.Time      `gorm:"not null"`
 }
 
 func (s *Session) TableName() string {
 	return "sessions"
+}
+
+func (s *Session) BeforeCreate(tx *gorm.DB) (err error) {
+	if s.ID == uuid.Nil {
+		s.ID = uuid.New()
+	}
+	return
 }
 
 func (s *Session) ToDomain() *domain.Session {

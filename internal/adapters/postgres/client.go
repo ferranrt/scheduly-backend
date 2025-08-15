@@ -5,6 +5,7 @@ import (
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 type GormPostgreSQLConfig struct {
@@ -16,8 +17,8 @@ type GormPostgreSQLConfig struct {
 	SSLMode  string
 }
 
-func NewGormPostgreSQL(cfg GormPostgreSQLConfig) (*gorm.DB, error) {
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+func getDSN(cfg GormPostgreSQLConfig) string {
+	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		cfg.Host,
 		cfg.Port,
 		cfg.User,
@@ -25,7 +26,21 @@ func NewGormPostgreSQL(cfg GormPostgreSQLConfig) (*gorm.DB, error) {
 		cfg.DBName,
 		cfg.SSLMode,
 	)
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+}
+
+func getGormConfig() *gorm.Config {
+	return &gorm.Config{
+		Logger:                 logger.Default.LogMode(logger.Info),
+		PrepareStmt:            true,
+		AllowGlobalUpdate:      false,
+		SkipDefaultTransaction: true,
+	}
+}
+
+func NewGormPostgreSQL(cfg GormPostgreSQLConfig) (*gorm.DB, error) {
+	dsn := getDSN(cfg)
+	gormCfg := getGormConfig()
+	db, err := gorm.Open(postgres.Open(dsn), gormCfg)
 	if err != nil {
 		return nil, err
 	}

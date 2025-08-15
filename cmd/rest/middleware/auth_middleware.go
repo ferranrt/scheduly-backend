@@ -1,62 +1,51 @@
 package middleware
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
+	"scheduly.io/core/cmd/rest/constants"
 	"scheduly.io/core/cmd/rest/helpers"
 	"scheduly.io/core/internal/domain"
-	"scheduly.io/core/internal/ports/usecases"
+	"scheduly.io/core/internal/ports"
+	"scheduly.io/core/internal/utils/token"
 )
 
 type AuthMiddleware struct {
-	authUseCase usecases.AuthUseCase
+	authService ports.AuthService
+	jwtConfig   domain.JWTConfig
 }
 
-func NewAuthMiddleware(authUseCase usecases.AuthUseCase) *AuthMiddleware {
+func NewAuthMiddleware(authUseCase ports.AuthService) *AuthMiddleware {
 	return &AuthMiddleware{
-		authUseCase: authUseCase,
+		authService: authUseCase,
 	}
 }
 
 func injectClaimsToContext(ctx *gin.Context, claims *domain.JWTClaims) {
-	ctx.Set("user_id", claims.UserID)
-	ctx.Set("email", claims.Email)
-	ctx.Set("user_claims", claims)
-}
-
-func extractHeaderToken(ctx *gin.Context) (string, error) {
-	authHeader := ctx.GetHeader("Authorization")
-	if authHeader == "" {
-		return "", errors.New("authorization header required")
-	}
-
-	if !strings.HasPrefix(authHeader, "Bearer ") {
-		return "", errors.New("invalid authorization header format")
-	}
-
-	return strings.TrimPrefix(authHeader, "Bearer "), nil
+	log.Println("injectClaimsToContext", claims)
+	ctx.Set(constants.UserIDClaimKey, claims.UserID.String())
+	ctx.Set(constants.EmailClaimKey, claims.Email)
 }
 
 // Authenticate middleware validates JWT tokens and sets user context
 func (middleware *AuthMiddleware) Authenticate() gin.HandlerFunc {
-	log.Println("Authenticate middleware")
 	return func(ctx *gin.Context) {
-		token, err := extractHeaderToken(ctx)
+		tk, err := token.ExtractToken(ctx)
 		if err != nil {
 			ctx.JSON(http.StatusUnauthorized, helpers.BuildErrorResponse(err.Error()))
 			ctx.Abort()
 			return
 		}
 
+		test, err := token.ExtractAndValidateToken(ctx, []byte(middleware.jwtConfig.AtkSecret))
+		fmt.Println("test", test)
+		fmt.Println("err", err)
+
 		// Validate the token
-		claims, err := middleware.authUseCase.ValidateToken(ctx.Request.Context(), token)
-		fmt.Println("token", token)
-		fmt.Println("claims", claims)
+		claims, err := middleware.authService.ValidateToken(ctx.Request.Context(), tk)
 		if err != nil {
 			ctx.JSON(http.StatusUnauthorized, helpers.BuildErrorResponse("Invalid or expired token"))
 			ctx.Abort()
@@ -64,65 +53,10 @@ func (middleware *AuthMiddleware) Authenticate() gin.HandlerFunc {
 		}
 
 		// Set user information in context
+
+		fmt.Println("claims", claims)
 		injectClaimsToContext(ctx, claims)
 
 		ctx.Next()
 	}
-}
-
-// OptionalAuth middleware validates JWT tokens if present but doesn't require them
-func (middleware *AuthMiddleware) OptionalAuth() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		token, err := extractHeaderToken(ctx)
-		if err != nil {
-			ctx.JSON(http.StatusUnauthorized, helpers.BuildErrorResponse(err.Error()))
-			ctx.Abort()
-			return
-		}
-
-		// Validate the token
-		claims, err := middleware.authUseCase.ValidateToken(ctx.Request.Context(), token)
-		if err != nil {
-			ctx.Next()
-			return
-		}
-
-		// Set user information in context
-		injectClaimsToContext(ctx, claims)
-
-		ctx.Next()
-	}
-}
-
-// GetUserClaims extracts user claims from the context
-func GetUserClaims(ctx *gin.Context) (*domain.JWTClaims, bool) {
-	claims, exists := ctx.Get("user_claims")
-	if !exists {
-		return nil, false
-	}
-
-	userClaims, ok := claims.(*domain.JWTClaims)
-	return userClaims, ok
-}
-
-// GetUserID extracts user ID from the context
-func GetUserID(c *gin.Context) (string, bool) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		return "", false
-	}
-
-	id, ok := userID.(string)
-	return id, ok
-}
-
-// GetUserEmail extracts user email from the context
-func GetUserEmail(c *gin.Context) (string, bool) {
-	email, exists := c.Get("email")
-	if !exists {
-		return "", false
-	}
-
-	userEmail, ok := email.(string)
-	return userEmail, ok
 }

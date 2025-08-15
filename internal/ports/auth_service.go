@@ -1,4 +1,4 @@
-package usecases
+package ports
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"scheduly.io/core/internal/domain"
 )
 
-type AuthUseCase interface {
+type AuthService interface {
 	Register(ctx context.Context, registration *domain.UserRegistrationInput, userAgent, ipAddress string) (*domain.AuthResponseDTO, error)
 	Login(ctx context.Context, login *domain.UserLoginInput, userAgent, ipAddress string) (*domain.AuthResponseDTO, error)
 	RefreshToken(ctx context.Context, refreshToken string) (*domain.RefreshTokenResponseDTO, error)

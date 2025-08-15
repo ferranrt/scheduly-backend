@@ -9,17 +9,15 @@ import (
 	"syscall"
 	"time"
 
-	"scheduly.io/core/cmd/rest/handlers"
 	"scheduly.io/core/cmd/rest/middleware"
 	"scheduly.io/core/cmd/rest/routes"
 	pg_repos "scheduly.io/core/internal/adapters/postgres/repositories"
-	"scheduly.io/core/internal/usecases"
+	"scheduly.io/core/internal/services"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
 	"scheduly.io/core/internal/config"
-	"scheduly.io/core/internal/services"
 )
 
 type RestApp struct {
@@ -28,63 +26,53 @@ type RestApp struct {
 }
 
 func NewRestApp(cfg *config.Config, db *gorm.DB) *RestApp {
-	return &RestApp{
-		cfg: cfg,
-		db:  db,
+	return &RestApp{cfg: cfg, db: db}
+}
+
+func createServer(cfg *config.Config, engine *gin.Engine) *http.Server {
+
+	return &http.Server{
+		Addr:         ":" + cfg.Server.Port,
+		Handler:      engine,
+		ReadTimeout:  cfg.Server.ReadTimeout,
+		WriteTimeout: cfg.Server.WriteTimeout,
+		IdleTimeout:  cfg.Server.IdleTimeout,
 	}
 }
 
 func (app *RestApp) Run() error {
 	// Initialize repositories
-	userRepo := pg_repos.NewUserRepository(app.db)
-	sessionRepo := pg_repos.NewSessionRepository(app.db)
+	userRepository := pg_repos.NewUserRepository(app.db)
+	sessionRepository := pg_repos.NewSessionRepository(app.db)
 
 	// Initialize services
-	jwtService := services.NewJWTService(app.cfg.JWT)
-	passwordService := services.NewPasswordService()
+	authService := services.NewAuthService(userRepository, sessionRepository, app.cfg.JWT)
 
-	// Initialize use cases
-	authUseCase := usecases.NewAuthUseCase(userRepo, sessionRepo, jwtService, passwordService, app.cfg.JWT)
-
-	// Initialize handlers
-	authHandler := handlers.NewAuthRootHandler(authUseCase)
-
-	// Initialize middleware
-	authMiddleware := middleware.NewAuthMiddleware(authUseCase)
+	// Initialize middlewares
+	authMiddleware := middleware.NewAuthMiddleware(authService)
 
 	// Setup Gin router
 	router := gin.Default()
 
 	// Add CORS middleware
-	router.Use(func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "*")
-		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	router.Use(middleware.CORSMiddleware("*"))
 
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
+	/* Public routes */
+	publicGroup := router.Group("/api/v1")
 
-		c.Next()
-	})
+	/* Protected routes */
+	protectedGroup := router.Group("/api/v1")
+	protectedGroup.Use(authMiddleware.Authenticate())
 
 	// Setup routes
-	routes.SetupAuthRoutes(router, authHandler, authMiddleware)
-
-	// Health check endpoint
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "OK"})
-	})
+	// Health Routes
+	routes.SetupHealthRoutes(router)
+	// Auth Routes
+	routes.SetupPublicAuthRoutes(publicGroup, &routes.AuthRoutesDeps{AuthService: authService})
+	routes.SetupProtectedAuthRoutes(protectedGroup, &routes.AuthRoutesDeps{AuthService: authService})
 
 	// Create the server
-	server := &http.Server{
-		Addr:         ":" + app.cfg.Server.Port,
-		Handler:      router,
-		ReadTimeout:  app.cfg.Server.ReadTimeout,
-		WriteTimeout: app.cfg.Server.WriteTimeout,
-		IdleTimeout:  app.cfg.Server.IdleTimeout,
-	}
+	server := createServer(app.cfg, router)
 
 	serverErrors := make(chan error, 1)
 

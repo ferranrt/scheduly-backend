@@ -1,4 +1,4 @@
-package usecases
+package services
 
 import (
 	"context"
@@ -7,33 +7,31 @@ import (
 
 	"github.com/google/uuid"
 	"scheduly.io/core/internal/domain"
-	"scheduly.io/core/internal/ports/repositories"
-	"scheduly.io/core/internal/ports/usecases"
-	"scheduly.io/core/internal/services"
+	"scheduly.io/core/internal/ports"
+	"scheduly.io/core/internal/utils/password"
+	"scheduly.io/core/internal/utils/token"
 )
 
 type authUseCase struct {
-	userRepo        repositories.UserRepository
-	sessionRepo     repositories.SessionRepository
-	jwtService      services.JWTService
-	passwordService services.PasswordService
-	jwtConfig       domain.JWTConfig
+	userRepo    ports.UserRepository
+	sessionRepo ports.SessionRepository
+	jwtConfig   domain.JWTConfig
 }
 
-func NewAuthUseCase(
-	userRepo repositories.UserRepository,
-	sessionRepo repositories.SessionRepository,
-	jwtService services.JWTService,
-	passwordService services.PasswordService,
+func NewAuthService(
+	userRepo ports.UserRepository,
+	sessionRepo ports.SessionRepository,
 	jwtConfig domain.JWTConfig,
-) usecases.AuthUseCase {
+) ports.AuthService {
 	return &authUseCase{
-		userRepo:        userRepo,
-		sessionRepo:     sessionRepo,
-		jwtService:      jwtService,
-		passwordService: passwordService,
-		jwtConfig:       jwtConfig,
+		userRepo:    userRepo,
+		sessionRepo: sessionRepo,
+		jwtConfig:   jwtConfig,
 	}
+}
+
+func generateTokenFromUser(user *domain.User, secret string, duration time.Duration) (string, error) {
+	return token.GenerateToken(user.ID, user.Email, []byte(secret), duration)
 }
 
 func (useCase *authUseCase) Register(ctx context.Context, registration *domain.UserRegistrationInput, userAgent, ipAddress string) (*domain.AuthResponseDTO, error) {
@@ -47,7 +45,7 @@ func (useCase *authUseCase) Register(ctx context.Context, registration *domain.U
 	}
 
 	// Hash password
-	hashedPassword, err := useCase.passwordService.HashPassword(registration.Password)
+	hashedPassword, err := password.HashPassword(registration.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -68,12 +66,12 @@ func (useCase *authUseCase) Register(ctx context.Context, registration *domain.U
 	}
 
 	// Generate tokens
-	accessToken, err := useCase.jwtService.GenerateAccessToken(user)
+	accessToken, err := generateTokenFromUser(user, useCase.jwtConfig.AtkSecret, useCase.jwtConfig.Expiry)
 	if err != nil {
 		return nil, err
 	}
 
-	refreshToken, err := useCase.jwtService.GenerateRefreshToken(user)
+	refreshToken, err := generateTokenFromUser(user, useCase.jwtConfig.RtkSecret, useCase.jwtConfig.Expiry)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +83,7 @@ func (useCase *authUseCase) Register(ctx context.Context, registration *domain.U
 		UserAgent:    userAgent,
 		IPAddress:    ipAddress,
 		IsActive:     true,
-		ExpiresAt:    time.Now().Add(useCase.jwtConfig.RefreshTokenExpiry),
+		ExpiresAt:    time.Now().Add(useCase.jwtConfig.Expiry),
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
@@ -99,7 +97,7 @@ func (useCase *authUseCase) Register(ctx context.Context, registration *domain.U
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		User:         user.ToResponse(),
-		ExpiresIn:    int64(useCase.jwtConfig.AccessTokenExpiry.Seconds()),
+		ExpiresIn:    int64(useCase.jwtConfig.Expiry.Seconds()),
 	}, nil
 }
 
@@ -111,18 +109,18 @@ func (useCase *authUseCase) Login(ctx context.Context, login *domain.UserLoginIn
 	}
 
 	// Verify password
-	err = useCase.passwordService.VerifyPassword(user.Password, login.Password)
+	err = password.VerifyPassword(user.Password, login.Password)
 	if err != nil {
 		return nil, errors.New("invalid credentials")
 	}
 
 	// Generate tokens
-	accessToken, err := useCase.jwtService.GenerateAccessToken(user)
+	accessToken, err := generateTokenFromUser(user, useCase.jwtConfig.AtkSecret, useCase.jwtConfig.Expiry)
 	if err != nil {
 		return nil, err
 	}
 
-	refreshToken, err := useCase.jwtService.GenerateRefreshToken(user)
+	refreshToken, err := generateTokenFromUser(user, useCase.jwtConfig.RtkSecret, useCase.jwtConfig.Expiry)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +132,7 @@ func (useCase *authUseCase) Login(ctx context.Context, login *domain.UserLoginIn
 		UserAgent:    userAgent,
 		IPAddress:    ipAddress,
 		IsActive:     true,
-		ExpiresAt:    time.Now().Add(useCase.jwtConfig.RefreshTokenExpiry),
+		ExpiresAt:    time.Now().Add(useCase.jwtConfig.Expiry),
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
@@ -148,19 +146,15 @@ func (useCase *authUseCase) Login(ctx context.Context, login *domain.UserLoginIn
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		User:         user.ToResponse(),
-		ExpiresIn:    int64(useCase.jwtConfig.AccessTokenExpiry.Seconds()),
+		ExpiresIn:    int64(useCase.jwtConfig.Expiry.Seconds()),
 	}, nil
 }
 
 func (useCase *authUseCase) RefreshToken(ctx context.Context, refreshToken string) (*domain.RefreshTokenResponseDTO, error) {
 	// Validate refresh token
-	claims, err := useCase.jwtService.ValidateToken(refreshToken)
+	claims, err := token.ValidateToken(refreshToken, []byte(useCase.jwtConfig.AtkSecret))
 	if err != nil {
 		return nil, errors.New("invalid refresh token")
-	}
-
-	if claims.Type != "refresh" {
-		return nil, errors.New("invalid token type")
 	}
 
 	// Check if session exists and is active
@@ -180,30 +174,31 @@ func (useCase *authUseCase) RefreshToken(ctx context.Context, refreshToken strin
 	}
 
 	// Generate new tokens
-	newAccessToken, err := useCase.jwtService.GenerateAccessToken(user)
+	newAccessToken, err := generateTokenFromUser(user, useCase.jwtConfig.AtkSecret, useCase.jwtConfig.Expiry)
 	if err != nil {
 		return nil, err
 	}
 
-	newRefreshToken, err := useCase.jwtService.GenerateRefreshToken(user)
+	newRefreshToken, err := generateTokenFromUser(user, useCase.jwtConfig.RtkSecret, useCase.jwtConfig.Expiry)
 	if err != nil {
 		return nil, err
 	}
 
 	// Update session with new refresh token
 	session.RefreshToken = newRefreshToken
-	session.ExpiresAt = time.Now().Add(useCase.jwtConfig.RefreshTokenExpiry)
+	session.ExpiresAt = time.Now().Add(useCase.jwtConfig.Expiry)
 	session.UpdatedAt = time.Now()
 
 	err = useCase.sessionRepo.Update(ctx, session)
 	if err != nil {
+
 		return nil, err
 	}
 
 	return &domain.RefreshTokenResponseDTO{
 		AccessToken:  newAccessToken,
 		RefreshToken: newRefreshToken,
-		ExpiresIn:    int64(useCase.jwtConfig.AccessTokenExpiry.Seconds()),
+		ExpiresIn:    int64(useCase.jwtConfig.Expiry.Seconds()),
 	}, nil
 }
 
@@ -241,14 +236,10 @@ func (useCase *authUseCase) LogoutAll(ctx context.Context, userID string) error 
 	return nil
 }
 
-func (useCase *authUseCase) ValidateToken(ctx context.Context, token string) (*domain.JWTClaims, error) {
-	claims, err := useCase.jwtService.ValidateToken(token)
+func (useCase *authUseCase) ValidateToken(ctx context.Context, tokenString string) (*domain.JWTClaims, error) {
+	claims, err := token.ValidateToken(tokenString, []byte(useCase.jwtConfig.AtkSecret))
 	if err != nil {
 		return nil, err
-	}
-
-	if claims.Type != "access" {
-		return nil, errors.New("invalid token type")
 	}
 
 	// Verify user still exists

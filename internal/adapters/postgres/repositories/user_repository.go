@@ -7,7 +7,7 @@ import (
 	"scheduly.io/core/internal/adapters/postgres/dbmodels"
 	"scheduly.io/core/internal/adapters/postgres/mappers"
 	"scheduly.io/core/internal/domain"
-	"scheduly.io/core/internal/ports/repositories"
+	"scheduly.io/core/internal/ports"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -18,12 +18,12 @@ type userRepository struct {
 	mapper   *mappers.UserMapper
 }
 
-func NewUserRepository(db *gorm.DB) repositories.UserRepository {
+func NewUserRepository(db *gorm.DB) ports.UserRepository {
 	return &userRepository{database: db, mapper: mappers.NewUserMapper()}
 }
 
 func (repo *userRepository) Create(ctx context.Context, user *domain.User) error {
-	dbUser := repo.mapper.DomainToDBModel(user)
+	dbUser := repo.mapper.ToDbModel(user)
 	result := repo.database.WithContext(ctx).Create(dbUser)
 	if result.Error != nil {
 		return result.Error
@@ -44,7 +44,7 @@ func (repo *userRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.
 		return nil, result.Error
 	}
 
-	return repo.mapper.DBModelToDomain(&dbUser), nil
+	return repo.mapper.ToDomain(&dbUser), nil
 }
 
 func (repo *userRepository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
@@ -57,11 +57,11 @@ func (repo *userRepository) GetByEmail(ctx context.Context, email string) (*doma
 		return nil, result.Error
 	}
 
-	return repo.mapper.DBModelToDomain(&dbUser), nil
+	return repo.mapper.ToDomain(&dbUser), nil
 }
 
 func (repo *userRepository) Update(ctx context.Context, user *domain.User) error {
-	dbUser := repo.mapper.DomainToDBModel(user)
+	dbUser := repo.mapper.ToDbModel(user)
 	result := repo.database.WithContext(ctx).Save(dbUser)
 	return result.Error
 }

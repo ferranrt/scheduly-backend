@@ -1,11 +1,11 @@
 package helpers
 
 import (
-	"fmt"
 	"log"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"scheduly.io/core/cmd/rest/constants"
 )
 
 func GetClientIPFromRequest(ctx *gin.Context) string {
@@ -31,9 +31,8 @@ func GetUserAgentFromRequest(ctx *gin.Context) string {
 }
 
 func GetUserIdFromRequest(ctx *gin.Context) string {
-	log.Println("GetUserIdFromRequest", ctx.GetString("user_id"))
-	userID := ctx.GetString(("user_id"))
-	fmt.Println("userID", userID)
+	userID := ctx.GetString(constants.UserIDClaimKey)
+	log.Println("GetUserIdFromRequest", userID)
 	return userID
 }
 
