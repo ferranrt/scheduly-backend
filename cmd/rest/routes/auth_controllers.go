@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"log"
 	"net/http"
 	"strings"
 
@@ -55,14 +54,12 @@ func RefreshTokenController(ctx *gin.Context, authService ports.AuthService) {
 	ctx.JSON(http.StatusOK, response)
 }
 
-// GetProfileController handles user profile retrieval
 func GetProfileController(ctx *gin.Context, authService ports.AuthService) {
-	helpers.PrintContextInternals(ctx, false)
+
 	userID := ctx.GetString(constants.UserIDClaimKey)
-	log.Println("GetProfile -> userID", userID)
+
 	userIDAsUUID, err := uuid.Parse(userID)
 	if err != nil {
-		log.Println("GetProfileError", err)
 		ctx.JSON(http.StatusUnauthorized, helpers.BuildErrorResponse("User not authenticated"))
 		return
 	}

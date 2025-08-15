@@ -34,7 +34,7 @@ type DatabaseConfig struct {
 	SSLMode  string
 }
 
-func getEnv2(key, defaultValue string) string {
+func getEnvVariable(key, defaultValue string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
 	}
@@ -77,22 +77,22 @@ func getDurationEnv(key string, defaultValue time.Duration) time.Duration {
 func New() *Config {
 	config := &Config{
 		Server: ServerConfig{
-			Port:         getEnv2("SERVER_PORT", "8080"),
+			Port:         getEnvVariable("SERVER_PORT", "8080"),
 			ReadTimeout:  getDurationEnv("SERVER_READ_TIMEOUT", 15*time.Second),
 			WriteTimeout: getDurationEnv("SERVER_WRITE_TIMEOUT", 15*time.Second),
 			IdleTimeout:  getDurationEnv("SERVER_IDLE_TIMEOUT", 60*time.Second),
 		},
 		Database: DatabaseConfig{
-			Host:     getEnv2("DB_HOST", "localhost"),
-			Port:     getEnv2("DB_PORT", "5432"),
-			User:     getEnv2("DB_USER", "postgres"),
-			Password: getEnv2("DB_PASSWORD", "postgres"),
-			DBName:   getEnv2("DB_NAME", "scheduly"),
-			SSLMode:  getEnv2("DB_SSL_MODE", "disable"),
+			Host:     getEnvVariable("DB_HOST", "localhost"),
+			Port:     getEnvVariable("DB_PORT", "5432"),
+			User:     getEnvVariable("DB_USER", "postgres"),
+			Password: getEnvVariable("DB_PASSWORD", "postgres"),
+			DBName:   getEnvVariable("DB_NAME", "scheduly"),
+			SSLMode:  getEnvVariable("DB_SSL_MODE", "disable"),
 		},
 		JWT: domain.JWTConfig{
-			AtkSecret: getEnv2("JWT_ATK_SECRET_KEY", "your_access_token_secret_key_here"),
-			RtkSecret: getEnv2("JWT_RTK_SECRET_KEY", "your_refresh_token_secret_key_here"),
+			AtkSecret: getEnvVariable("JWT_ATK_SECRET_KEY", "your_access_token_secret_key_here"),
+			RtkSecret: getEnvVariable("JWT_RTK_SECRET_KEY", "your_refresh_token_secret_key_here"),
 			Expiry:    getJWTDuration("JWT_ACCESS_TOKEN_DURATION", 15*time.Minute),
 		},
 	}

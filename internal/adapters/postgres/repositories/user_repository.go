@@ -14,17 +14,20 @@ import (
 )
 
 type userRepository struct {
-	database *gorm.DB
-	mapper   *mappers.UserMapper
+	database   *gorm.DB
+	userMapper *mappers.UserMapper
 }
 
 func NewUserRepository(db *gorm.DB) ports.UserRepository {
-	return &userRepository{database: db, mapper: mappers.NewUserMapper()}
+	return &userRepository{
+		database:   db,
+		userMapper: mappers.NewUserMapper(),
+	}
 }
 
-func (repo *userRepository) Create(ctx context.Context, user *domain.User) error {
-	dbUser := repo.mapper.ToDbModel(user)
-	result := repo.database.WithContext(ctx).Create(dbUser)
+func (r *userRepository) Create(ctx context.Context, user *domain.User) error {
+	dbUser := r.userMapper.ToDbModel(user)
+	result := r.database.WithContext(ctx).Create(dbUser)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -34,9 +37,9 @@ func (repo *userRepository) Create(ctx context.Context, user *domain.User) error
 	return nil
 }
 
-func (repo *userRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
+func (r *userRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
 	var dbUser dbmodels.User
-	result := repo.database.WithContext(ctx).Where("id = ?", id).First(&dbUser)
+	result := r.database.WithContext(ctx).Where("id = ?", id).First(&dbUser)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, errors.New("user not found")
@@ -44,12 +47,12 @@ func (repo *userRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.
 		return nil, result.Error
 	}
 
-	return repo.mapper.ToDomain(&dbUser), nil
+	return r.userMapper.ToDomain(&dbUser), nil
 }
 
-func (repo *userRepository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
+func (r *userRepository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
 	var dbUser dbmodels.User
-	result := repo.database.WithContext(ctx).Where("email = ?", email).First(&dbUser)
+	result := r.database.WithContext(ctx).Where("email = ?", email).First(&dbUser)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, errors.New("user not found")
@@ -57,22 +60,22 @@ func (repo *userRepository) GetByEmail(ctx context.Context, email string) (*doma
 		return nil, result.Error
 	}
 
-	return repo.mapper.ToDomain(&dbUser), nil
+	return r.userMapper.ToDomain(&dbUser), nil
 }
 
-func (repo *userRepository) Update(ctx context.Context, user *domain.User) error {
-	dbUser := repo.mapper.ToDbModel(user)
-	result := repo.database.WithContext(ctx).Save(dbUser)
+func (r *userRepository) Update(ctx context.Context, user *domain.User) error {
+	dbUser := r.userMapper.ToDbModel(user)
+	result := r.database.WithContext(ctx).Save(dbUser)
 	return result.Error
 }
 
-func (repo *userRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	result := repo.database.WithContext(ctx).Delete(&dbmodels.User{}, "id = ?", id)
+func (r *userRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	result := r.database.WithContext(ctx).Delete(&dbmodels.User{}, "id = ?", id)
 	return result.Error
 }
 
-func (repo *userRepository) ExistsByEmail(ctx context.Context, email string) (bool, error) {
+func (r *userRepository) ExistsByEmail(ctx context.Context, email string) (bool, error) {
 	var count int64
-	result := repo.database.WithContext(ctx).Model(&dbmodels.User{}).Where("email = ?", email).Count(&count)
+	result := r.database.WithContext(ctx).Model(&dbmodels.User{}).Where("email = ?", email).Count(&count)
 	return count > 0, result.Error
 }
