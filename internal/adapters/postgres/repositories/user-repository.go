@@ -7,6 +7,7 @@ import (
 	"scheduly.io/core/internal/adapters/postgres/dbmodels"
 	"scheduly.io/core/internal/adapters/postgres/mappers"
 	"scheduly.io/core/internal/domain"
+	"scheduly.io/core/internal/exceptions"
 	"scheduly.io/core/internal/ports"
 
 	"github.com/google/uuid"
@@ -42,7 +43,7 @@ func (r *userRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Use
 	result := r.database.WithContext(ctx).Where("id = ?", id).First(&dbUser)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, errors.New("user not found")
+			return nil, exceptions.ErrUserNotFound
 		}
 		return nil, result.Error
 	}
@@ -55,7 +56,7 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*domain.
 	result := r.database.WithContext(ctx).Where("email = ?", email).First(&dbUser)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, errors.New("user not found")
+			return nil, exceptions.ErrUserNotFound
 		}
 		return nil, result.Error
 	}

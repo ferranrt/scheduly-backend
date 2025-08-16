@@ -157,7 +157,7 @@ func (uc *authServiceImpl) RefreshToken(ctx context.Context, refreshToken string
 	}
 
 	if !source.IsActive || time.Now().After(source.RefreshTokenExpiresAt) {
-		return nil, exceptions.ErrSourceExpiredOrInvalid
+		return nil, exceptions.ErrAuthSourceExpiredOrInvalid
 	}
 
 	// Get user

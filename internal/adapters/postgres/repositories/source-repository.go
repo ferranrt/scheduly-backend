@@ -42,7 +42,7 @@ func (repo *sourceRepository) GetByID(ctx context.Context, id string) (*domain.S
 	result := repo.database.WithContext(ctx).Where("id = ?", id).First(&dbSource)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, exceptions.ErrSourceNotFound
+			return nil, exceptions.ErrAuthSourceNotFound
 		}
 		return nil, result.Error
 	}

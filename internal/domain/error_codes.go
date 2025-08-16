@@ -15,11 +15,4 @@ var (
 	ErrNotFound            Error = errors.New("NOT_FOUND")
 	ErrBadRequest          Error = errors.New("BAD_REQUEST")
 	ErrUnexpectedError     Error = errors.New("UNEXPECTED_ERROR")
-	ErrDbInsert            Error = errors.New("DB_INSERT_ERROR")
-	ErrDbUpdate            Error = errors.New("DB_UPDATE_ERROR")
-	ErrDbSelect            Error = errors.New("DB_SELECT_ERROR")
-	ErrDbDelete            Error = errors.New("DB_DELETE_ERROR")
-
-	/* Auth Errors */
-
 )

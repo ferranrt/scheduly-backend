@@ -59,7 +59,7 @@ func (m *AuthMiddleware) Authenticate() gin.HandlerFunc {
 			return
 		}
 		if !source.IsActive || time.Now().After(source.RefreshTokenExpiresAt) {
-			abortWithUnauthorized(ctx, exceptions.ErrSourceExpiredOrInvalid)
+			abortWithUnauthorized(ctx, exceptions.ErrAuthSourceExpiredOrInvalid)
 			return
 		}
 
