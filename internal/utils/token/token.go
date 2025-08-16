@@ -42,10 +42,11 @@ func ValidateToken(tokenString string, secret []byte) (*domain.JWTClaims, error)
 }
 
 // GenerateToken creates a new JWT token for a user
-func GenerateToken(userID uuid.UUID, email string, secret []byte, expiration time.Duration) (string, error) {
+func GenerateToken(userID uuid.UUID, email string, secret []byte, expiration time.Duration, sourceID string) (string, error) {
 	claims := domain.JWTClaims{
-		UserID: userID,
-		Email:  email,
+		UserID:   userID,
+		Email:    email,
+		SourceID: sourceID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

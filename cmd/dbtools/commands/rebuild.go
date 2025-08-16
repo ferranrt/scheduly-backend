@@ -33,7 +33,7 @@ func runRebuild() error {
 	// Drop all tables and recreate them
 	models := []interface{}{
 		&dbmodels.User{},
-		&dbmodels.Session{},
+		&dbmodels.Source{},
 	}
 
 	// Drop all tables

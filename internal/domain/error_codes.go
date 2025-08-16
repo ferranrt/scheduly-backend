@@ -19,4 +19,7 @@ var (
 	ErrDbUpdate            Error = errors.New("DB_UPDATE_ERROR")
 	ErrDbSelect            Error = errors.New("DB_SELECT_ERROR")
 	ErrDbDelete            Error = errors.New("DB_DELETE_ERROR")
+
+	/* Auth Errors */
+
 )

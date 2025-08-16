@@ -47,41 +47,46 @@ func (m *MockUserRepository) ExistsByEmail(ctx context.Context, email string) (b
 	return args.Bool(0), args.Error(1)
 }
 
-type MockSessionRepository struct {
+type MockSourceRepository struct {
 	mock.Mock
 }
 
-func (m *MockSessionRepository) Create(ctx context.Context, session *domain.Session) error {
-	args := m.Called(ctx, session)
+func (m *MockSourceRepository) Create(ctx context.Context, source *domain.Source) error {
+	args := m.Called(ctx, source)
 	return args.Error(0)
 }
 
-func (m *MockSessionRepository) GetByRefreshToken(ctx context.Context, refreshToken string) (*domain.Session, error) {
+func (m *MockSourceRepository) GetByRefreshToken(ctx context.Context, refreshToken string) (*domain.Source, error) {
 	args := m.Called(ctx, refreshToken)
-	return args.Get(0).(*domain.Session), args.Error(1)
+	return args.Get(0).(*domain.Source), args.Error(1)
 }
 
-func (m *MockSessionRepository) GetByUserID(ctx context.Context, userID string) ([]*domain.Session, error) {
+func (m *MockSourceRepository) GetByUserID(ctx context.Context, userID string) ([]*domain.Source, error) {
 	args := m.Called(ctx, userID)
-	return args.Get(0).([]*domain.Session), args.Error(1)
+	return args.Get(0).([]*domain.Source), args.Error(1)
 }
 
-func (m *MockSessionRepository) Update(ctx context.Context, session *domain.Session) error {
-	args := m.Called(ctx, session)
+func (m *MockSourceRepository) Update(ctx context.Context, source *domain.Source) error {
+	args := m.Called(ctx, source)
 	return args.Error(0)
 }
 
-func (m *MockSessionRepository) Delete(ctx context.Context, id string) error {
+func (m *MockSourceRepository) GetByID(ctx context.Context, id string) (*domain.Source, error) {
+	args := m.Called(ctx, id)
+	return args.Get(0).(*domain.Source), args.Error(1)
+}
+
+func (m *MockSourceRepository) Delete(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
 
-func (m *MockSessionRepository) DeleteByUserID(ctx context.Context, userID string) error {
+func (m *MockSourceRepository) DeleteByUserID(ctx context.Context, userID string) error {
 	args := m.Called(ctx, userID)
 	return args.Error(0)
 }
 
-func (m *MockSessionRepository) DeleteExpired(ctx context.Context) error {
+func (m *MockSourceRepository) DeleteExpired(ctx context.Context) error {
 	args := m.Called(ctx)
 	return args.Error(0)
 }
@@ -136,13 +141,13 @@ func getTestJWTConfig() domain.JWTConfig {
 func TestAuthUseCase_Register(t *testing.T) {
 	// Setup
 	mockUserRepo := new(MockUserRepository)
-	mockSessionRepo := new(MockSessionRepository)
+	mockSourceRepo := new(MockSourceRepository)
 	mockJWTService := new(MockJWTService)
 	mockPasswordService := new(MockPasswordService)
 
-	authUseCase := NewAuthService(mockUserRepo, mockSessionRepo, getTestJWTConfig())
+	authUseCase := NewAuthService(mockUserRepo, mockSourceRepo, getTestJWTConfig())
 
-	registration := &domain.UserRegistrationInput{
+	registration := &domain.UserRegisterInput{
 		Email:     "test@example.com",
 		Password:  "password123",
 		FirstName: "John",
@@ -155,7 +160,7 @@ func TestAuthUseCase_Register(t *testing.T) {
 	mockUserRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.User")).Return(nil)
 	mockJWTService.On("GenerateAccessToken", mock.AnythingOfType("*domain.User")).Return("access_token", nil)
 	mockJWTService.On("GenerateRefreshToken", mock.AnythingOfType("*domain.User")).Return("refresh_token", nil)
-	mockSessionRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.Session")).Return(nil)
+	mockSourceRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.Source")).Return(nil)
 
 	// Execute
 	response, err := authUseCase.Register(context.Background(), registration, "test-agent", "127.0.0.1")
@@ -170,7 +175,7 @@ func TestAuthUseCase_Register(t *testing.T) {
 
 	// Verify all expectations were met
 	mockUserRepo.AssertExpectations(t)
-	mockSessionRepo.AssertExpectations(t)
+	mockSourceRepo.AssertExpectations(t)
 	mockJWTService.AssertExpectations(t)
 	mockPasswordService.AssertExpectations(t)
 }
@@ -178,11 +183,11 @@ func TestAuthUseCase_Register(t *testing.T) {
 func TestAuthUseCase_Register_UserAlreadyExists(t *testing.T) {
 	// Setup
 	mockUserRepo := new(MockUserRepository)
-	mockSessionRepo := new(MockSessionRepository)
+	mockSourceRepo := new(MockSourceRepository)
 
-	authUseCase := NewAuthService(mockUserRepo, mockSessionRepo, getTestJWTConfig())
+	authUseCase := NewAuthService(mockUserRepo, mockSourceRepo, getTestJWTConfig())
 
-	registration := &domain.UserRegistrationInput{
+	registration := &domain.UserRegisterInput{
 		Email:     "test@example.com",
 		Password:  "password123",
 		FirstName: "John",
@@ -207,10 +212,10 @@ func TestAuthUseCase_Register_UserAlreadyExists(t *testing.T) {
 func TestAuthUseCase_Login(t *testing.T) {
 	// Setup
 	mockUserRepo := new(MockUserRepository)
-	mockSessionRepo := new(MockSessionRepository)
+	mockSourceRepo := new(MockSourceRepository)
 	mockJWTService := new(MockJWTService)
 
-	authUseCase := NewAuthService(mockUserRepo, mockSessionRepo, getTestJWTConfig())
+	authUseCase := NewAuthService(mockUserRepo, mockSourceRepo, getTestJWTConfig())
 
 	login := &domain.UserLoginInput{
 		Email:    "test@example.com",
@@ -231,7 +236,7 @@ func TestAuthUseCase_Login(t *testing.T) {
 	mockUserRepo.On("GetByEmail", mock.Anything, login.Email).Return(user, nil)
 	mockJWTService.On("GenerateAccessToken", user).Return("access_token", nil)
 	mockJWTService.On("GenerateRefreshToken", user).Return("refresh_token", nil)
-	mockSessionRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.Session")).Return(nil)
+	mockSourceRepo.On("Create", mock.Anything, mock.AnythingOfType("*domain.Source")).Return(nil)
 
 	// Execute
 	response, err := authUseCase.Login(context.Background(), login, "test-agent", "127.0.0.1")
@@ -246,7 +251,7 @@ func TestAuthUseCase_Login(t *testing.T) {
 
 	// Verify all expectations were met
 	mockUserRepo.AssertExpectations(t)
-	mockSessionRepo.AssertExpectations(t)
+	mockSourceRepo.AssertExpectations(t)
 	mockJWTService.AssertExpectations(t)
 
 }
@@ -254,9 +259,9 @@ func TestAuthUseCase_Login(t *testing.T) {
 func TestAuthUseCase_GetProfile(t *testing.T) {
 	// Setup
 	mockUserRepo := new(MockUserRepository)
-	mockSessionRepo := new(MockSessionRepository)
+	mockSourceRepo := new(MockSourceRepository)
 
-	authUseCase := NewAuthService(mockUserRepo, mockSessionRepo, getTestJWTConfig())
+	authUseCase := NewAuthService(mockUserRepo, mockSourceRepo, getTestJWTConfig())
 
 	userID := uuid.New()
 	user := &domain.User{
@@ -291,9 +296,9 @@ func TestAuthUseCase_GetProfile(t *testing.T) {
 func TestAuthUseCase_GetProfile_UserNotFound(t *testing.T) {
 	// Setup
 	mockUserRepo := new(MockUserRepository)
-	mockSessionRepo := new(MockSessionRepository)
+	mockSourceRepo := new(MockSourceRepository)
 
-	authUseCase := NewAuthService(mockUserRepo, mockSessionRepo, getTestJWTConfig())
+	authUseCase := NewAuthService(mockUserRepo, mockSourceRepo, getTestJWTConfig())
 
 	userID := uuid.New()
 

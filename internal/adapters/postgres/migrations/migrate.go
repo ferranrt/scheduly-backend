@@ -10,7 +10,7 @@ func Migrate(db *gorm.DB) error {
 	// Models to migrate
 	models := []interface{}{
 		&dbmodels.User{},
-		&dbmodels.Session{},
+		&dbmodels.Source{},
 	}
 
 	// Auto-migrate all models

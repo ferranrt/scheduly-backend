@@ -9,11 +9,12 @@ import (
 	"scheduly.io/core/cmd/rest/constants"
 	"scheduly.io/core/cmd/rest/helpers"
 	"scheduly.io/core/internal/domain"
+	"scheduly.io/core/internal/exceptions"
 	"scheduly.io/core/internal/ports"
 )
 
 func RegisterController(ctx *gin.Context, authService ports.AuthService) {
-	var registration domain.UserRegistrationInput
+	var registration domain.UserRegisterInput
 	if err := ctx.ShouldBindJSON(&registration); err != nil {
 		ctx.JSON(http.StatusBadRequest, helpers.BuildErrorResponse(domain.ErrBadRequestPayload.Error()))
 		return
@@ -88,7 +89,7 @@ func LoginController(ctx *gin.Context, authService ports.AuthService) {
 
 	response, err := authService.Login(ctx.Request.Context(), &login, requestMetadata.UserAgent, requestMetadata.IPAddress)
 	if err != nil {
-		if err.Error() == "invalid credentials" {
+		if err.Error() == exceptions.ErrAuthInvalidCredentials.Error() {
 			ctx.JSON(http.StatusUnauthorized, helpers.BuildErrorResponse(err.Error()))
 			return
 		}

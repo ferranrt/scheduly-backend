@@ -43,13 +43,13 @@ func createServer(cfg *config.Config, engine *gin.Engine) *http.Server {
 func (app *RestApp) Run() error {
 	// Initialize repositories
 	userRepository := pg_repos.NewUserRepository(app.db)
-	sessionRepository := pg_repos.NewSessionRepository(app.db)
+	sourceRepository := pg_repos.NewSourceRepository(app.db)
 
 	// Initialize services
-	authService := services.NewAuthService(userRepository, sessionRepository, app.cfg.JWT)
+	authService := services.NewAuthService(userRepository, sourceRepository, app.cfg.JWT)
 
 	// Initialize middlewares
-	authMiddleware := middleware.NewAuthMiddleware(authService)
+	authMiddleware := middleware.NewAuthMiddleware(authService, sourceRepository, app.cfg.JWT)
 
 	// Setup Gin router
 	router := gin.Default()
