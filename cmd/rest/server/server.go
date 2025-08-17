@@ -11,7 +11,9 @@ import (
 
 	"buke.io/core/cmd/rest/middleware"
 	"buke.io/core/cmd/rest/routes"
+	"buke.io/core/internal/adapters/local"
 	pg_repos "buke.io/core/internal/adapters/postgres/repositories"
+	"buke.io/core/internal/ports"
 	"buke.io/core/internal/services"
 
 	"github.com/gin-gonic/gin"
@@ -40,19 +42,26 @@ func createServer(cfg *config.Config, engine *gin.Engine) *http.Server {
 	}
 }
 
+func initializeLogger() ports.Logger {
+	return local.NewLocalLogger()
+}
+
 func (app *RestApp) Run() error {
+	router := gin.Default()
+	// Initialize logger
+	logger := initializeLogger()
+
 	// Initialize repositories
-	userRepository := pg_repos.NewUserRepository(app.db)
-	sourceRepository := pg_repos.NewSourceRepository(app.db)
+	userRepository := pg_repos.NewUserRepository(app.db, logger)
+	sourceRepository := pg_repos.NewSourceRepository(app.db, logger)
 
 	// Initialize services
-	authService := services.NewAuthService(userRepository, sourceRepository, app.cfg.JWT)
+	authService := services.NewAuthService(userRepository, sourceRepository, app.cfg.JWT, logger)
 
 	// Initialize middlewares
 	authMiddleware := middleware.NewAuthMiddleware(authService, sourceRepository, app.cfg.JWT)
 
 	// Setup Gin router
-	router := gin.Default()
 
 	// Add CORS middleware
 	router.Use(middleware.CORSMiddleware("*"))

@@ -13,21 +13,23 @@ import (
 	"gorm.io/gorm"
 )
 
-type sourceRepository struct {
-	database *gorm.DB
-	mapper   *mappers.SourceMapper
+type PGSourceRepository struct {
+	db     *gorm.DB
+	mapper *mappers.SourceMapper
+	logger ports.Logger
 }
 
-func NewSourceRepository(db *gorm.DB) ports.SourceRepository {
-	return &sourceRepository{
-		database: db,
-		mapper:   mappers.NewSourceMapper(),
+func NewSourceRepository(db *gorm.DB, logger ports.Logger) ports.SourceRepository {
+	return &PGSourceRepository{
+		db:     db,
+		mapper: mappers.NewSourceMapper(),
+		logger: logger,
 	}
 }
 
-func (repo *sourceRepository) Create(ctx context.Context, source *domain.Source) error {
+func (repo *PGSourceRepository) Create(ctx context.Context, source *domain.Source) error {
 	dbSource := repo.mapper.DomainToDBModel(source)
-	result := repo.database.WithContext(ctx).Create(dbSource)
+	result := repo.db.WithContext(ctx).Create(dbSource)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -37,9 +39,9 @@ func (repo *sourceRepository) Create(ctx context.Context, source *domain.Source)
 	return nil
 }
 
-func (repo *sourceRepository) GetByID(ctx context.Context, id string) (*domain.Source, error) {
+func (repo *PGSourceRepository) GetByID(ctx context.Context, id string) (*domain.Source, error) {
 	var dbSource dbmodels.Source
-	result := repo.database.WithContext(ctx).Where("id = ?", id).First(&dbSource)
+	result := repo.db.WithContext(ctx).Where("id = ?", id).First(&dbSource)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, exceptions.ErrAuthSourceNotFound
@@ -49,9 +51,9 @@ func (repo *sourceRepository) GetByID(ctx context.Context, id string) (*domain.S
 	return repo.mapper.DBModelToDomain(&dbSource), nil
 }
 
-func (repo *sourceRepository) GetByUserID(ctx context.Context, userID string) ([]*domain.Source, error) {
+func (repo *PGSourceRepository) GetByUserID(ctx context.Context, userID string) ([]*domain.Source, error) {
 	var dbSources []dbmodels.Source
-	result := repo.database.WithContext(ctx).Where("user_id = ? AND is_active = ?", userID, true).Find(&dbSources)
+	result := repo.db.WithContext(ctx).Where("user_id = ? AND is_active = ?", userID, true).Find(&dbSources)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -64,23 +66,23 @@ func (repo *sourceRepository) GetByUserID(ctx context.Context, userID string) ([
 	return sources, nil
 }
 
-func (repo *sourceRepository) Update(ctx context.Context, source *domain.Source) error {
+func (repo *PGSourceRepository) Update(ctx context.Context, source *domain.Source) error {
 	dbSSource := repo.mapper.DomainToDBModel(source)
-	result := repo.database.WithContext(ctx).Save(dbSSource)
+	result := repo.db.WithContext(ctx).Save(dbSSource)
 	return result.Error
 }
 
-func (repo *sourceRepository) Delete(ctx context.Context, id string) error {
-	result := repo.database.WithContext(ctx).Delete(&dbmodels.Source{}, "id = ?", id)
+func (repo *PGSourceRepository) Delete(ctx context.Context, id string) error {
+	result := repo.db.WithContext(ctx).Delete(&dbmodels.Source{}, "id = ?", id)
 	return result.Error
 }
 
-func (repo *sourceRepository) DeleteByUserID(ctx context.Context, userID string) error {
-	result := repo.database.WithContext(ctx).Delete(&dbmodels.Source{}, "user_id = ?", userID)
+func (repo *PGSourceRepository) DeleteByUserID(ctx context.Context, userID string) error {
+	result := repo.db.WithContext(ctx).Delete(&dbmodels.Source{}, "user_id = ?", userID)
 	return result.Error
 }
 
-func (repo *sourceRepository) DeleteExpired(ctx context.Context) error {
-	result := repo.database.WithContext(ctx).Delete(&dbmodels.Source{}, "expires_at < ?", time.Now())
+func (repo *PGSourceRepository) DeleteExpired(ctx context.Context) error {
+	result := repo.db.WithContext(ctx).Delete(&dbmodels.Source{}, "expires_at < ?", time.Now())
 	return result.Error
 }

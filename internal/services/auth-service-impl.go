@@ -9,7 +9,6 @@ import (
 	"buke.io/core/internal/dtos"
 	"buke.io/core/internal/exceptions"
 	"buke.io/core/internal/ports"
-	"buke.io/core/internal/utils/logger"
 	"buke.io/core/internal/utils/password"
 	"buke.io/core/internal/utils/random"
 	"buke.io/core/internal/utils/token"
@@ -20,17 +19,20 @@ type authServiceImpl struct {
 	userRepo   ports.UserRepository
 	sourceRepo ports.SourceRepository
 	jwtConfig  domain.JWTConfig
+	logger     ports.Logger
 }
 
 func NewAuthService(
 	userRepo ports.UserRepository,
 	sourceRepo ports.SourceRepository,
 	jwtConfig domain.JWTConfig,
+	logger ports.Logger,
 ) ports.AuthService {
 	return &authServiceImpl{
 		userRepo:   userRepo,
 		sourceRepo: sourceRepo,
 		jwtConfig:  jwtConfig,
+		logger:     logger,
 	}
 }
 
@@ -38,36 +40,40 @@ func generateTokenFromUser(user *domain.User, secret string, duration time.Durat
 	return token.GenerateToken(user.ID, user.Email, []byte(secret), duration, sourceID)
 }
 
-func (uc *authServiceImpl) Register(ctx context.Context, registration *domain.UserRegisterInput, userAgent, ipAddress string) (*dtos.AuthResponseDTO, error) {
+func (uc *authServiceImpl) Register(ctx context.Context, input *domain.UserRegisterInput, userAgent, ipAddress string) (*dtos.AuthResponseDTO, error) {
 	// Check if user already exists
-	exists, err := uc.userRepo.ExistsByEmail(ctx, registration.Email)
+	exists, err := uc.userRepo.ExistsByEmail(ctx, input.Email)
 	if err != nil {
+		uc.logger.Error(ctx, err)
 		return nil, err
 	}
 	if exists {
-		return nil, errors.New("user already exists")
+		existsError := errors.New("user already exists")
+		uc.logger.ErrorWithVar(ctx, existsError, map[string]interface{}{
+			"email": input.Email,
+		})
+		return nil, existsError
 	}
 
 	// Hash password
-	hashedPassword, err := password.HashPassword(registration.Password)
+	hashedPassword, err := password.HashPassword(input.Password)
 	if err != nil {
 		return nil, err
 	}
 
 	// Create user
 	user := &domain.User{
-		Email:     registration.Email,
+		Email:     input.Email,
 		Password:  hashedPassword,
-		FirstName: registration.FirstName,
-		LastName:  registration.LastName,
+		FirstName: input.FirstName,
+		LastName:  input.LastName,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
 
 	err = uc.userRepo.Create(ctx, user)
 	if err != nil {
-		log := logger.New("debug")
-		log.Error(err)
+		uc.logger.Error(ctx, err)
 		return nil, err
 	}
 	refreshToken := random.GenerateRandomString(128)

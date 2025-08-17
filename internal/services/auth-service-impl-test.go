@@ -7,12 +7,14 @@ import (
 	"time"
 
 	"buke.io/core/internal/domain"
+	"buke.io/core/internal/test-utils/mocks"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 // Mock implementations for testing
+
 type MockUserRepository struct {
 	mock.Mock
 }
@@ -140,12 +142,13 @@ func getTestJWTConfig() domain.JWTConfig {
 
 func TestAuthUseCase_Register(t *testing.T) {
 	// Setup
+	mockLogger := new(mocks.LoggerMock)
 	mockUserRepo := new(MockUserRepository)
 	mockSourceRepo := new(MockSourceRepository)
 	mockJWTService := new(MockJWTService)
 	mockPasswordService := new(MockPasswordService)
 
-	authUseCase := NewAuthService(mockUserRepo, mockSourceRepo, getTestJWTConfig())
+	authUseCase := NewAuthService(mockUserRepo, mockSourceRepo, getTestJWTConfig(), mockLogger)
 
 	registration := &domain.UserRegisterInput{
 		Email:     "test@example.com",
@@ -184,8 +187,8 @@ func TestAuthUseCase_Register_UserAlreadyExists(t *testing.T) {
 	// Setup
 	mockUserRepo := new(MockUserRepository)
 	mockSourceRepo := new(MockSourceRepository)
-
-	authUseCase := NewAuthService(mockUserRepo, mockSourceRepo, getTestJWTConfig())
+	mockLogger := new(mocks.LoggerMock)
+	authUseCase := NewAuthService(mockUserRepo, mockSourceRepo, getTestJWTConfig(), mockLogger)
 
 	registration := &domain.UserRegisterInput{
 		Email:     "test@example.com",
@@ -214,8 +217,9 @@ func TestAuthUseCase_Login(t *testing.T) {
 	mockUserRepo := new(MockUserRepository)
 	mockSourceRepo := new(MockSourceRepository)
 	mockJWTService := new(MockJWTService)
+	mockLogger := new(mocks.LoggerMock)
 
-	authUseCase := NewAuthService(mockUserRepo, mockSourceRepo, getTestJWTConfig())
+	authUseCase := NewAuthService(mockUserRepo, mockSourceRepo, getTestJWTConfig(), mockLogger)
 
 	login := &domain.UserLoginInput{
 		Email:    "test@example.com",
@@ -260,8 +264,9 @@ func TestAuthUseCase_GetProfile(t *testing.T) {
 	// Setup
 	mockUserRepo := new(MockUserRepository)
 	mockSourceRepo := new(MockSourceRepository)
+	mockLogger := new(mocks.LoggerMock)
 
-	authUseCase := NewAuthService(mockUserRepo, mockSourceRepo, getTestJWTConfig())
+	authUseCase := NewAuthService(mockUserRepo, mockSourceRepo, getTestJWTConfig(), mockLogger)
 
 	userID := uuid.New()
 	user := &domain.User{
@@ -297,8 +302,9 @@ func TestAuthUseCase_GetProfile_UserNotFound(t *testing.T) {
 	// Setup
 	mockUserRepo := new(MockUserRepository)
 	mockSourceRepo := new(MockSourceRepository)
+	mockLogger := new(mocks.LoggerMock)
 
-	authUseCase := NewAuthService(mockUserRepo, mockSourceRepo, getTestJWTConfig())
+	authUseCase := NewAuthService(mockUserRepo, mockSourceRepo, getTestJWTConfig(), mockLogger)
 
 	userID := uuid.New()
 
