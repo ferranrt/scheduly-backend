@@ -5,8 +5,8 @@ import (
 	"os"
 	"time"
 
+	"buke.io/core/internal/domain"
 	_ "github.com/joho/godotenv/autoload"
-	"scheduly.io/core/internal/domain"
 )
 
 // Config holds all configuration for the application
@@ -26,12 +26,13 @@ type ServerConfig struct {
 
 // DatabaseConfig holds the database configuration
 type DatabaseConfig struct {
-	Host     string
-	Port     string
-	User     string
-	Password string
-	DBName   string
-	SSLMode  string
+	Host       string
+	Port       string
+	User       string
+	Password   string
+	DBName     string
+	SSLMode    string
+	LogEnabled bool
 }
 
 func getEnvVariable(key, defaultValue string) string {
@@ -39,6 +40,14 @@ func getEnvVariable(key, defaultValue string) string {
 		return value
 	}
 	log.Printf("%s not set, defaulting to %s", key, defaultValue)
+	return defaultValue
+}
+
+func getEnvAsBool(key string, defaultValue bool) bool {
+	if value, exists := os.LookupEnv(key); exists {
+		return value == "true"
+	}
+	log.Printf("%s not set, defaulting to %t", key, defaultValue)
 	return defaultValue
 }
 
@@ -83,12 +92,13 @@ func New() *Config {
 			IdleTimeout:  getDurationEnv("SERVER_IDLE_TIMEOUT", 60*time.Second),
 		},
 		Database: DatabaseConfig{
-			Host:     getEnvVariable("DB_HOST", "localhost"),
-			Port:     getEnvVariable("DB_PORT", "5432"),
-			User:     getEnvVariable("DB_USER", "postgres"),
-			Password: getEnvVariable("DB_PASSWORD", "postgres"),
-			DBName:   getEnvVariable("DB_NAME", "scheduly"),
-			SSLMode:  getEnvVariable("DB_SSL_MODE", "disable"),
+			Host:       getEnvVariable("DB_HOST", "localhost"),
+			Port:       getEnvVariable("DB_PORT", "5432"),
+			User:       getEnvVariable("DB_USER", "postgres"),
+			Password:   getEnvVariable("DB_PASSWORD", "postgres"),
+			DBName:     getEnvVariable("DB_NAME", "scheduly"),
+			SSLMode:    getEnvVariable("DB_SSL_MODE", "disable"),
+			LogEnabled: getEnvAsBool("DB_LOG_ENABLED", false),
 		},
 		JWT: domain.JWTConfig{
 			AtkSecret: getEnvVariable("JWT_ATK_SECRET_KEY", "your_access_token_secret_key_here"),
@@ -100,13 +110,24 @@ func New() *Config {
 }
 
 func Print(cfg Config) {
+	log.Printf("--------------------------------")
+	log.Printf("-------APP CONFIG---------------")
+	log.Printf("--------------------------------")
 	log.Printf("App Port: %s\n", cfg.Server.Port)
+	log.Printf("--------------------------------")
+	log.Printf("-------DB CONFIG---------------")
+	log.Printf("--------------------------------")
 	log.Printf("DB Host: %s\n", cfg.Database.Host)
 	log.Printf("DB Port: %s\n", cfg.Database.Port)
 	log.Printf("DB Name: %s\n", cfg.Database.DBName)
 	log.Printf("DB User: %s\n", cfg.Database.User)
 	log.Printf("DB Password: %s\n", cfg.Database.Password)
-	log.Printf("JWT Access Token Secret: %s\n", cfg.JWT.AtkSecret)
-	log.Printf("JWT Refresh Token Secret: %s\n", cfg.JWT.RtkSecret)
-	log.Printf("JWT Access Token Expiry: %s\n", cfg.JWT.Expiry)
+	log.Printf("DB Log Enabled: %t\n", cfg.Database.LogEnabled)
+	log.Printf("--------------------------------")
+	log.Printf("-------JWT CONFIG---------------")
+	log.Printf("--------------------------------")
+	log.Printf("JWT ATK Secret: %s\n", cfg.JWT.AtkSecret)
+	log.Printf("JWT RTK Secret: %s\n", cfg.JWT.RtkSecret)
+	log.Printf("JWT Expiry: %s\n", cfg.JWT.Expiry)
+	log.Printf("--------------------------------")
 }

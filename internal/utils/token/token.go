@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
+	"buke.io/core/internal/domain"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"scheduly.io/core/internal/domain"
 )
 
 // Common auth errors

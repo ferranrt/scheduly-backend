@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
+	"buke.io/core/internal/domain"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"scheduly.io/core/internal/domain"
 )
 
 // Mock implementations for testing

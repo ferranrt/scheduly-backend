@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"scheduly.io/core/cmd/dbtools/commands"
+	"buke.io/core/cmd/dbtools/commands"
 )
 
 var rootCmd = commands.RootCommand()

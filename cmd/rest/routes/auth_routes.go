@@ -1,8 +1,8 @@
 package routes
 
 import (
+	"buke.io/core/internal/ports"
 	"github.com/gin-gonic/gin"
-	"scheduly.io/core/internal/ports"
 )
 
 type AuthRoutesDeps struct {

@@ -3,8 +3,8 @@ package domain
 import (
 	"time"
 
+	"buke.io/core/internal/dtos"
 	"github.com/google/uuid"
-	"scheduly.io/core/internal/dtos"
 )
 
 type User struct {

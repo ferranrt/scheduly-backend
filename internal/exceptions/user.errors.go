@@ -3,7 +3,7 @@ package exceptions
 import (
 	"errors"
 
-	"scheduly.io/core/internal/domain"
+	"buke.io/core/internal/domain"
 )
 
 var (

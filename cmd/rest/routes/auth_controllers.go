@@ -4,13 +4,13 @@ import (
 	"net/http"
 	"strings"
 
+	"buke.io/core/cmd/rest/constants"
+	"buke.io/core/cmd/rest/helpers"
+	"buke.io/core/internal/domain"
+	"buke.io/core/internal/exceptions"
+	"buke.io/core/internal/ports"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"scheduly.io/core/cmd/rest/constants"
-	"scheduly.io/core/cmd/rest/helpers"
-	"scheduly.io/core/internal/domain"
-	"scheduly.io/core/internal/exceptions"
-	"scheduly.io/core/internal/ports"
 )
 
 func RegisterController(ctx *gin.Context, authService ports.AuthService) {

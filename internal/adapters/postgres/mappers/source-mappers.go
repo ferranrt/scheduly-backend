@@ -1,8 +1,8 @@
 package mappers
 
 import (
-	"scheduly.io/core/internal/adapters/postgres/dbmodels"
-	"scheduly.io/core/internal/domain"
+	"buke.io/core/internal/adapters/postgres/dbmodels"
+	"buke.io/core/internal/domain"
 )
 
 type SourceMapper struct {

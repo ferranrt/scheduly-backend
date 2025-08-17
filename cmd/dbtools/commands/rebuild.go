@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"log"
 
+	"buke.io/core/cmd/dbtools/helpers"
+	"buke.io/core/internal/adapters/postgres/dbmodels"
+	"buke.io/core/internal/adapters/postgres/migrations"
 	"github.com/spf13/cobra"
-	"scheduly.io/core/cmd/dbtools/helpers"
-	"scheduly.io/core/internal/adapters/postgres/dbmodels"
-	"scheduly.io/core/internal/adapters/postgres/migrations"
 )
 
 func Rebuild() *cobra.Command {

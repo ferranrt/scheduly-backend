@@ -2,10 +2,12 @@ package helpers
 
 import (
 	"log"
+	"net/http"
 	"strings"
 
+	"buke.io/core/cmd/rest/constants"
+	"buke.io/core/internal/domain"
 	"github.com/gin-gonic/gin"
-	"scheduly.io/core/cmd/rest/constants"
 )
 
 func GetClientIPFromRequest(ctx *gin.Context) string {
@@ -46,4 +48,15 @@ func GetRequestMetadata(ctx *gin.Context) RequestMetadata {
 		UserAgent: ctx.GetHeader("User-Agent"),
 		IPAddress: GetClientIPFromRequest(ctx),
 	}
+}
+
+func AbortUnauthorizedRequest(ctx *gin.Context, err error) {
+	ctx.JSON(http.StatusUnauthorized, BuildErrorResponse(err.Error()))
+	ctx.Abort()
+}
+
+func AttachClaimsToContext(ctx *gin.Context, claims *domain.JWTClaims) {
+	ctx.Set(constants.UserIDClaimKey, claims.UserID.String())
+	ctx.Set(constants.EmailClaimKey, claims.Email)
+	ctx.Set(constants.SourceIDClaimKey, claims.SourceID)
 }

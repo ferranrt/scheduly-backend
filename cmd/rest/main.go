@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 
-	"scheduly.io/core/cmd/rest/helpers"
-	"scheduly.io/core/cmd/rest/server"
-	"scheduly.io/core/internal/config"
+	"buke.io/core/cmd/rest/helpers"
+	"buke.io/core/cmd/rest/server"
+	"buke.io/core/internal/config"
 )
 
 func main() {

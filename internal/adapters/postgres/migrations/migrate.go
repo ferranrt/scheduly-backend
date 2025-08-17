@@ -1,9 +1,9 @@
 package migrations
 
 import (
+	"buke.io/core/internal/adapters/postgres/dbmodels"
 	_ "github.com/lib/pq"
 	"gorm.io/gorm"
-	"scheduly.io/core/internal/adapters/postgres/dbmodels"
 )
 
 func Migrate(db *gorm.DB) error {

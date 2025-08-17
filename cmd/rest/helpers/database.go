@@ -3,19 +3,20 @@ package helpers
 import (
 	"log"
 
+	"buke.io/core/internal/adapters/postgres"
+	"buke.io/core/internal/config"
 	"gorm.io/gorm"
-	"scheduly.io/core/internal/adapters/postgres"
-	"scheduly.io/core/internal/config"
 )
 
 func GetDatabaseFromConfig(cfg *config.Config) (*gorm.DB, error) {
 	db, err := postgres.NewGormPostgreSQL(postgres.GormPostgreSQLConfig{
-		Host:     cfg.Database.Host,
-		Port:     cfg.Database.Port,
-		User:     cfg.Database.User,
-		Password: cfg.Database.Password,
-		DBName:   cfg.Database.DBName,
-		SSLMode:  cfg.Database.SSLMode,
+		Host:       cfg.Database.Host,
+		Port:       cfg.Database.Port,
+		User:       cfg.Database.User,
+		Password:   cfg.Database.Password,
+		DBName:     cfg.Database.DBName,
+		SSLMode:    cfg.Database.SSLMode,
+		LogEnabled: cfg.Database.LogEnabled,
 	})
 
 	if err != nil {

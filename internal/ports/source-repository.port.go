@@ -3,7 +3,7 @@ package ports
 import (
 	"context"
 
-	"scheduly.io/core/internal/domain"
+	"buke.io/core/internal/domain"
 )
 
 type SourceRepository interface {

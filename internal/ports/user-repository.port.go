@@ -3,8 +3,8 @@ package ports
 import (
 	"context"
 
+	"buke.io/core/internal/domain"
 	"github.com/google/uuid"
-	"scheduly.io/core/internal/domain"
 )
 
 type UserRepository interface {

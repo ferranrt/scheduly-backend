@@ -5,14 +5,15 @@ import (
 	"errors"
 	"time"
 
+	"buke.io/core/internal/domain"
+	"buke.io/core/internal/dtos"
+	"buke.io/core/internal/exceptions"
+	"buke.io/core/internal/ports"
+	"buke.io/core/internal/utils/logger"
+	"buke.io/core/internal/utils/password"
+	"buke.io/core/internal/utils/random"
+	"buke.io/core/internal/utils/token"
 	"github.com/google/uuid"
-	"scheduly.io/core/internal/domain"
-	"scheduly.io/core/internal/dtos"
-	"scheduly.io/core/internal/exceptions"
-	"scheduly.io/core/internal/ports"
-	"scheduly.io/core/internal/utils/password"
-	"scheduly.io/core/internal/utils/random"
-	"scheduly.io/core/internal/utils/token"
 )
 
 type authServiceImpl struct {
@@ -65,6 +66,8 @@ func (uc *authServiceImpl) Register(ctx context.Context, registration *domain.Us
 
 	err = uc.userRepo.Create(ctx, user)
 	if err != nil {
+		log := logger.New("debug")
+		log.Error(err)
 		return nil, err
 	}
 	refreshToken := random.GenerateRandomString(128)

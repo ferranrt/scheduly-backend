@@ -3,9 +3,9 @@ package ports
 import (
 	"context"
 
+	"buke.io/core/internal/domain"
+	"buke.io/core/internal/dtos"
 	"github.com/google/uuid"
-	"scheduly.io/core/internal/domain"
-	"scheduly.io/core/internal/dtos"
 )
 
 type AuthService interface {

@@ -5,12 +5,12 @@ import (
 	"errors"
 	"time"
 
+	"buke.io/core/internal/adapters/postgres/dbmodels"
+	"buke.io/core/internal/adapters/postgres/mappers"
+	"buke.io/core/internal/domain"
+	"buke.io/core/internal/exceptions"
+	"buke.io/core/internal/ports"
 	"gorm.io/gorm"
-	"scheduly.io/core/internal/adapters/postgres/dbmodels"
-	"scheduly.io/core/internal/adapters/postgres/mappers"
-	"scheduly.io/core/internal/domain"
-	"scheduly.io/core/internal/exceptions"
-	"scheduly.io/core/internal/ports"
 )
 
 type sourceRepository struct {

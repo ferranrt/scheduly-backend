@@ -3,9 +3,9 @@ package dbmodels
 import (
 	"time"
 
+	"buke.io/core/internal/domain"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"scheduly.io/core/internal/domain"
 )
 
 type Source struct {

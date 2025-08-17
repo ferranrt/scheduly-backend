@@ -9,15 +9,15 @@ import (
 	"syscall"
 	"time"
 
-	"scheduly.io/core/cmd/rest/middleware"
-	"scheduly.io/core/cmd/rest/routes"
-	pg_repos "scheduly.io/core/internal/adapters/postgres/repositories"
-	"scheduly.io/core/internal/services"
+	"buke.io/core/cmd/rest/middleware"
+	"buke.io/core/cmd/rest/routes"
+	pg_repos "buke.io/core/internal/adapters/postgres/repositories"
+	"buke.io/core/internal/services"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
-	"scheduly.io/core/internal/config"
+	"buke.io/core/internal/config"
 )
 
 type RestApp struct {

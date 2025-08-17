@@ -9,12 +9,13 @@ import (
 )
 
 type GormPostgreSQLConfig struct {
-	Host     string
-	Port     string
-	User     string
-	Password string
-	DBName   string
-	SSLMode  string
+	Host       string
+	Port       string
+	User       string
+	Password   string
+	DBName     string
+	SSLMode    string
+	LogEnabled bool
 }
 
 func getDSN(cfg GormPostgreSQLConfig) string {
@@ -28,18 +29,22 @@ func getDSN(cfg GormPostgreSQLConfig) string {
 	)
 }
 
-func getGormConfig() *gorm.Config {
-	return &gorm.Config{
-		Logger:                 logger.Default.LogMode(logger.Info),
+func getGormConfig(cfg GormPostgreSQLConfig) *gorm.Config {
+	config := &gorm.Config{
+
 		PrepareStmt:            true,
 		AllowGlobalUpdate:      false,
 		SkipDefaultTransaction: true,
 	}
+	if cfg.LogEnabled {
+		config.Logger = logger.Default.LogMode(logger.Info)
+	}
+	return config
 }
 
 func NewGormPostgreSQL(cfg GormPostgreSQLConfig) (*gorm.DB, error) {
 	dsn := getDSN(cfg)
-	gormCfg := getGormConfig()
+	gormCfg := getGormConfig(cfg)
 	db, err := gorm.Open(postgres.Open(dsn), gormCfg)
 	if err != nil {
 		return nil, err

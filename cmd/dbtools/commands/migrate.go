@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 
+	"buke.io/core/cmd/dbtools/helpers"
+	"buke.io/core/internal/adapters/postgres/migrations"
 	"github.com/spf13/cobra"
-	"scheduly.io/core/cmd/dbtools/helpers"
-	"scheduly.io/core/internal/adapters/postgres/migrations"
 )
 
 func Migrate() *cobra.Command {
