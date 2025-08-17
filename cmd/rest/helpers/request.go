@@ -1,7 +1,6 @@
 package helpers
 
 import (
-	"log"
 	"net/http"
 	"strings"
 
@@ -33,9 +32,7 @@ func GetUserAgentFromRequest(ctx *gin.Context) string {
 }
 
 func GetUserIdFromRequest(ctx *gin.Context) string {
-	userID := ctx.GetString(constants.UserIDClaimKey)
-	log.Println("GetUserIdFromRequest", userID)
-	return userID
+	return ctx.GetString(constants.UserIDClaimKey)
 }
 
 type RequestMetadata struct {

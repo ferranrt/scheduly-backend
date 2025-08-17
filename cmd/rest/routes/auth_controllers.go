@@ -85,9 +85,9 @@ func LoginController(ctx *gin.Context, authService ports.AuthService) {
 		return
 	}
 
-	requestMetadata := helpers.GetRequestMetadata(ctx)
+	meta := helpers.GetRequestMetadata(ctx)
 
-	response, err := authService.Login(ctx.Request.Context(), &login, requestMetadata.UserAgent, requestMetadata.IPAddress)
+	response, err := authService.Login(ctx.Request.Context(), &login, meta.UserAgent, meta.IPAddress)
 	if err != nil {
 		if err.Error() == exceptions.ErrAuthInvalidCredentials.Error() {
 			ctx.JSON(http.StatusUnauthorized, helpers.BuildErrorResponse(err.Error()))
