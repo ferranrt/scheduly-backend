@@ -9,17 +9,17 @@ import (
 	"syscall"
 	"time"
 
-	"buke.io/core/cmd/rest/middleware"
-	"buke.io/core/cmd/rest/routes"
-	"buke.io/core/internal/adapters/local"
-	pg_repos "buke.io/core/internal/adapters/postgres/repositories"
-	"buke.io/core/internal/ports"
-	"buke.io/core/internal/services"
+	"bifur.app/core/cmd/rest/middleware"
+	"bifur.app/core/cmd/rest/routes"
+	"bifur.app/core/internal/adapters/local"
+	pg_repos "bifur.app/core/internal/adapters/postgres/repositories"
+	"bifur.app/core/internal/ports"
+	"bifur.app/core/internal/services"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
-	"buke.io/core/internal/config"
+	"bifur.app/core/internal/config"
 )
 
 type RestApp struct {
@@ -54,6 +54,7 @@ func (app *RestApp) Run() error {
 	// Initialize repositories
 	userRepository := pg_repos.NewUserRepository(app.db, logger)
 	sourceRepository := pg_repos.NewSourceRepository(app.db, logger)
+	centersRepository := pg_repos.NewPgCenterRepository(app.db, logger)
 
 	// Initialize services
 	authService := services.NewAuthService(userRepository, sourceRepository, app.cfg.JWT, logger)
@@ -73,12 +74,13 @@ func (app *RestApp) Run() error {
 	protectedGroup := router.Group("/api/v1")
 	protectedGroup.Use(authMiddleware.Authenticate())
 
-	// Setup routes
 	// Health Routes
 	routes.SetupHealthRoutes(router)
 	// Auth Routes
 	routes.SetupPublicAuthRoutes(publicGroup, &routes.AuthRoutesDeps{AuthService: authService})
 	routes.SetupProtectedAuthRoutes(protectedGroup, &routes.AuthRoutesDeps{AuthService: authService})
+	// Centers Routes
+	routes.SetupCentersRoutes(protectedGroup.Group("/centers"), &routes.CentersRoutesDeps{CentersRepository: centersRepository})
 
 	// Create the server
 	server := createServer(app.cfg, router)

@@ -5,17 +5,17 @@ import (
 	"errors"
 	"time"
 
-	"buke.io/core/internal/domain"
-	"buke.io/core/internal/dtos"
-	"buke.io/core/internal/exceptions"
-	"buke.io/core/internal/ports"
-	"buke.io/core/internal/utils/password"
-	"buke.io/core/internal/utils/random"
-	"buke.io/core/internal/utils/token"
+	"bifur.app/core/internal/domain"
+
+	"bifur.app/core/internal/exceptions"
+	"bifur.app/core/internal/ports"
+	"bifur.app/core/internal/utils/password"
+	"bifur.app/core/internal/utils/random"
+	"bifur.app/core/internal/utils/token"
 	"github.com/google/uuid"
 )
 
-type authServiceImpl struct {
+type AuthServiceImplementation struct {
 	userRepo   ports.UserRepository
 	sourceRepo ports.SourceRepository
 	jwtConfig  domain.JWTConfig
@@ -28,7 +28,7 @@ func NewAuthService(
 	jwtConfig domain.JWTConfig,
 	logger ports.Logger,
 ) ports.AuthService {
-	return &authServiceImpl{
+	return &AuthServiceImplementation{
 		userRepo:   userRepo,
 		sourceRepo: sourceRepo,
 		jwtConfig:  jwtConfig,
@@ -40,7 +40,7 @@ func generateTokenFromUser(user *domain.User, secret string, duration time.Durat
 	return token.GenerateToken(user.ID, user.Email, []byte(secret), duration, sourceID)
 }
 
-func (uc *authServiceImpl) Register(ctx context.Context, input *domain.UserRegisterInput, userAgent, ipAddress string) (*dtos.AuthResponseDTO, error) {
+func (uc *AuthServiceImplementation) Register(ctx context.Context, input *domain.UserRegisterInput, userAgent, ipAddress string) (*domain.RefreshTokenPayload, error) {
 	// Check if user already exists
 	exists, err := uc.userRepo.ExistsByEmail(ctx, input.Email)
 	if err != nil {
@@ -100,15 +100,14 @@ func (uc *authServiceImpl) Register(ctx context.Context, input *domain.UserRegis
 		return nil, err
 	}
 
-	return &dtos.AuthResponseDTO{
+	return &domain.RefreshTokenPayload{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
-		User:         user.ToResponse(),
 		ExpiresIn:    int64(uc.jwtConfig.Expiry.Seconds()),
 	}, nil
 }
 
-func (uc *authServiceImpl) Login(ctx context.Context, login *domain.UserLoginInput, userAgent, ipAddress string) (*dtos.AuthResponseDTO, error) {
+func (uc *AuthServiceImplementation) Login(ctx context.Context, login *domain.UserLoginInput, userAgent, ipAddress string) (*domain.AuthenticationPayload, error) {
 	// Get user by email
 	user, err := uc.userRepo.GetByEmail(ctx, login.Email)
 	if err != nil {
@@ -144,15 +143,19 @@ func (uc *authServiceImpl) Login(ctx context.Context, login *domain.UserLoginInp
 		return nil, err
 	}
 
-	return &dtos.AuthResponseDTO{
+	userPayload := &domain.AuthenticationUserPayload{
+		ID: user.ID,
+	}
+
+	return &domain.AuthenticationPayload{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
-		User:         user.ToResponse(),
+		User:         userPayload,
 		ExpiresIn:    int64(uc.jwtConfig.Expiry.Seconds()),
 	}, nil
 }
 
-func (uc *authServiceImpl) RefreshToken(ctx context.Context, refreshToken string) (*domain.RefreshTokenResponseDTO, error) {
+func (uc *AuthServiceImplementation) RefreshToken(ctx context.Context, refreshToken string) (*domain.RefreshTokenPayload, error) {
 	// Validate refresh token
 	claims, err := token.ValidateToken(refreshToken, []byte(uc.jwtConfig.AtkSecret))
 	if err != nil {
@@ -192,14 +195,14 @@ func (uc *authServiceImpl) RefreshToken(ctx context.Context, refreshToken string
 		return nil, err
 	}
 
-	return &domain.RefreshTokenResponseDTO{
+	return &domain.RefreshTokenPayload{
 		AccessToken:  newAccessToken,
 		RefreshToken: newRefreshToken,
 		ExpiresIn:    int64(uc.jwtConfig.Expiry.Seconds()),
 	}, nil
 }
 
-func (uc *authServiceImpl) Logout(ctx context.Context, refreshToken string) error {
+func (uc *AuthServiceImplementation) Logout(ctx context.Context, refreshToken string) error {
 	// Get source by refresh token
 	source, err := uc.sourceRepo.GetByID(ctx, refreshToken)
 	if err != nil {
@@ -213,7 +216,7 @@ func (uc *authServiceImpl) Logout(ctx context.Context, refreshToken string) erro
 	return uc.sourceRepo.Update(ctx, source)
 }
 
-func (uc *authServiceImpl) LogoutAll(ctx context.Context, userID string) error {
+func (uc *AuthServiceImplementation) LogoutAll(ctx context.Context, userID string) error {
 	// Get all active sources for user
 	sources, err := uc.sourceRepo.GetByUserID(ctx, userID)
 	if err != nil {
@@ -233,7 +236,7 @@ func (uc *authServiceImpl) LogoutAll(ctx context.Context, userID string) error {
 	return nil
 }
 
-func (uc *authServiceImpl) ValidateToken(ctx context.Context, tokenString string) (*domain.JWTClaims, error) {
+func (uc *AuthServiceImplementation) ValidateToken(ctx context.Context, tokenString string) (*domain.JWTClaims, error) {
 	claims, err := token.ValidateToken(tokenString, []byte(uc.jwtConfig.AtkSecret))
 	if err != nil {
 		return nil, err
@@ -248,14 +251,12 @@ func (uc *authServiceImpl) ValidateToken(ctx context.Context, tokenString string
 	return claims, nil
 }
 
-func (uc *authServiceImpl) GetProfile(ctx context.Context, userID uuid.UUID) (*dtos.UserProfileResponseDTO, error) {
+func (uc *AuthServiceImplementation) GetProfile(ctx context.Context, userID uuid.UUID) (*domain.User, error) {
 	// Get user by ID
 	user, err := uc.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, errors.New("user not found")
 	}
 
-	return &dtos.UserProfileResponseDTO{
-		User: *user.ToResponse(),
-	}, nil
+	return user, nil
 }

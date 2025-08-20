@@ -5,11 +5,11 @@ import (
 	"errors"
 	"time"
 
-	"buke.io/core/internal/adapters/postgres/dbmodels"
-	"buke.io/core/internal/adapters/postgres/mappers"
-	"buke.io/core/internal/domain"
-	"buke.io/core/internal/exceptions"
-	"buke.io/core/internal/ports"
+	"bifur.app/core/internal/adapters/postgres/dbmodels"
+	"bifur.app/core/internal/adapters/postgres/mappers"
+	"bifur.app/core/internal/domain"
+	"bifur.app/core/internal/exceptions"
+	"bifur.app/core/internal/ports"
 	"gorm.io/gorm"
 )
 

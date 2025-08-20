@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"buke.io/core/internal/domain"
-	"buke.io/core/internal/test-utils/mocks"
+	"bifur.app/core/internal/domain"
+	"bifur.app/core/internal/test-utils/mocks"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -173,8 +173,6 @@ func TestAuthUseCase_Register(t *testing.T) {
 	assert.NotNil(t, response)
 	assert.Equal(t, "access_token", response.AccessToken)
 	assert.Equal(t, "refresh_token", response.RefreshToken)
-	assert.NotNil(t, response.User)
-	assert.Equal(t, registration.Email, response.User.Email)
 
 	// Verify all expectations were met
 	mockUserRepo.AssertExpectations(t)
@@ -251,7 +249,6 @@ func TestAuthUseCase_Login(t *testing.T) {
 	assert.Equal(t, "access_token", response.AccessToken)
 	assert.Equal(t, "refresh_token", response.RefreshToken)
 	assert.NotNil(t, response.User)
-	assert.Equal(t, user.Email, response.User.Email)
 
 	// Verify all expectations were met
 	mockUserRepo.AssertExpectations(t)
@@ -288,11 +285,6 @@ func TestAuthUseCase_GetProfile(t *testing.T) {
 	// Assert
 	assert.NoError(t, err)
 	assert.NotNil(t, response)
-	assert.NotNil(t, response.User)
-	assert.Equal(t, userID, response.User.ID)
-	assert.Equal(t, user.Email, response.User.Email)
-	assert.Equal(t, user.FirstName, response.User.FirstName)
-	assert.Equal(t, user.LastName, response.User.LastName)
 
 	// Verify all expectations were met
 	mockUserRepo.AssertExpectations(t)

@@ -16,8 +16,19 @@ type RefreshTokenInput struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
 }
 
-type RefreshTokenResponseDTO struct {
+type RefreshTokenPayload struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 	ExpiresIn    int64  `json:"expires_in"`
+}
+
+type AuthenticationUserPayload struct {
+	ID uuid.UUID `json:"id"`
+}
+
+type AuthenticationPayload struct {
+	AccessToken  string                     `json:"access_token"`
+	RefreshToken string                     `json:"refresh_token"`
+	User         *AuthenticationUserPayload `json:"user"`
+	ExpiresIn    int64                      `json:"expires_in"`
 }

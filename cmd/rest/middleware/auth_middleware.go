@@ -3,11 +3,11 @@ package middleware
 import (
 	"time"
 
-	"buke.io/core/cmd/rest/helpers"
-	"buke.io/core/internal/domain"
-	"buke.io/core/internal/exceptions"
-	"buke.io/core/internal/ports"
-	"buke.io/core/internal/utils/token"
+	"bifur.app/core/cmd/rest/helpers"
+	"bifur.app/core/internal/domain"
+	"bifur.app/core/internal/exceptions"
+	"bifur.app/core/internal/ports"
+	"bifur.app/core/internal/utils/token"
 	"github.com/gin-gonic/gin"
 )
 

@@ -1,4 +1,4 @@
-module buke.io/core
+module bifur.app/core
 
 go 1.24.0
 

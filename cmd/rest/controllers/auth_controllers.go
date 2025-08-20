@@ -1,14 +1,14 @@
-package routes
+package controllers
 
 import (
 	"net/http"
 	"strings"
 
-	"buke.io/core/cmd/rest/constants"
-	"buke.io/core/cmd/rest/helpers"
-	"buke.io/core/internal/domain"
-	"buke.io/core/internal/exceptions"
-	"buke.io/core/internal/ports"
+	"bifur.app/core/cmd/rest/constants"
+	"bifur.app/core/cmd/rest/helpers"
+	"bifur.app/core/internal/domain"
+	"bifur.app/core/internal/exceptions"
+	"bifur.app/core/internal/ports"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -122,14 +122,18 @@ func LogoutController(ctx *gin.Context, authService ports.AuthService) {
 
 // LogoutAllController handles user logout from all devices
 func LogoutAllController(ctx *gin.Context, authService ports.AuthService) {
-	userID := helpers.GetUserIdFromRequest(ctx)
+	userCtx, err := helpers.GetUserIdFromRequest(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, helpers.BuildErrorResponse("Failed to logout from all devices"))
+		return
+	}
 
-	if userID == "" {
+	if userCtx.UserID == "" {
 		ctx.JSON(http.StatusUnauthorized, helpers.BuildErrorResponse("User not authenticated"))
 		return
 	}
 
-	err := authService.LogoutAll(ctx.Request.Context(), userID)
+	err = authService.LogoutAll(ctx.Request.Context(), userCtx.UserID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, helpers.BuildErrorResponse("Failed to logout from all devices"))
 		return

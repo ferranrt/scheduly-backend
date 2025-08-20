@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"buke.io/core/internal/domain"
+	"bifur.app/core/internal/domain"
 	"github.com/stretchr/testify/mock"
 )
 

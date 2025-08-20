@@ -4,8 +4,8 @@ import (
 	"context"
 	"log"
 
-	"buke.io/core/internal/domain"
-	"buke.io/core/internal/utils/logger"
+	"bifur.app/core/internal/domain"
+	"bifur.app/core/internal/utils/logger"
 )
 
 type Logger struct {

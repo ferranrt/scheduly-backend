@@ -3,8 +3,8 @@ package helpers
 import (
 	"log"
 
-	"buke.io/core/internal/adapters/postgres"
-	"buke.io/core/internal/config"
+	"bifur.app/core/internal/adapters/postgres"
+	"bifur.app/core/internal/config"
 	"gorm.io/gorm"
 )
 

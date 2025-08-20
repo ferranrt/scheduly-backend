@@ -3,7 +3,7 @@ package ports
 import (
 	"context"
 
-	"buke.io/core/internal/domain"
+	"bifur.app/core/internal/domain"
 )
 
 type SourceRepository interface {

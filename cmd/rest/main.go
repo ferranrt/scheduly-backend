@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 
-	"buke.io/core/cmd/rest/helpers"
-	"buke.io/core/cmd/rest/server"
-	"buke.io/core/internal/config"
+	"bifur.app/core/cmd/rest/helpers"
+	"bifur.app/core/cmd/rest/server"
+	"bifur.app/core/internal/config"
 )
 
 func main() {

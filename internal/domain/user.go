@@ -3,7 +3,6 @@ package domain
 import (
 	"time"
 
-	"buke.io/core/internal/dtos"
 	"github.com/google/uuid"
 )
 
@@ -27,15 +26,4 @@ type UserRegisterInput struct {
 type UserLoginInput struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
-}
-
-func (u *User) ToResponse() *dtos.UserResponseDTO {
-	return &dtos.UserResponseDTO{
-		ID:        u.ID,
-		Email:     u.Email,
-		FirstName: u.FirstName,
-		LastName:  u.LastName,
-		CreatedAt: u.CreatedAt,
-		UpdatedAt: u.UpdatedAt,
-	}
 }

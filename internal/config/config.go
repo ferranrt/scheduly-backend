@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"buke.io/core/internal/domain"
+	"bifur.app/core/internal/domain"
 	_ "github.com/joho/godotenv/autoload"
 )
 

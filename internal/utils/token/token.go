@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"buke.io/core/internal/domain"
+	"bifur.app/core/internal/domain"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"

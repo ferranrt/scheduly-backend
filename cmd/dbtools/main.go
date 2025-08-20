@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"buke.io/core/cmd/dbtools/commands"
+	"bifur.app/core/cmd/dbtools/commands"
 )
 
 var rootCmd = commands.RootCommand()

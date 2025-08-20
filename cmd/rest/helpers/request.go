@@ -4,9 +4,10 @@ import (
 	"net/http"
 	"strings"
 
-	"buke.io/core/cmd/rest/constants"
-	"buke.io/core/internal/domain"
+	"bifur.app/core/cmd/rest/constants"
+	"bifur.app/core/internal/domain"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func GetClientIPFromRequest(ctx *gin.Context) string {
@@ -31,8 +32,18 @@ func GetUserAgentFromRequest(ctx *gin.Context) string {
 	return ctx.GetHeader("User-Agent")
 }
 
-func GetUserIdFromRequest(ctx *gin.Context) string {
-	return ctx.GetString(constants.UserIDClaimKey)
+type UserCtx struct {
+	UserID string
+	AsUUID uuid.UUID
+}
+
+func GetUserIdFromRequest(ctx *gin.Context) (UserCtx, error) {
+	userID := ctx.GetString(constants.UserIDClaimKey)
+	userIDUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return UserCtx{}, err
+	}
+	return UserCtx{UserID: userID, AsUUID: userIDUUID}, nil
 }
 
 type RequestMetadata struct {

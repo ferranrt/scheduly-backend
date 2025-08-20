@@ -1,8 +1,8 @@
 package mappers
 
 import (
-	"buke.io/core/internal/adapters/postgres/dbmodels"
-	"buke.io/core/internal/domain"
+	"bifur.app/core/internal/adapters/postgres/dbmodels"
+	"bifur.app/core/internal/domain"
 )
 
 type UserMapper struct {
